@@ -1,0 +1,1110 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+@using System.Globalization
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using cse325_budgetwise.Data
+@using cse325_budgetwise.Models
+
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>BudgetWise Dashboard</PageTitle>
+
+<div class="container-fluid dashboard-container">
+    <div class="dashboard-heading">
+        <div>
+            <h1>Financial Dashboard</h1>
+
+            <p class="text-muted mb-0">
+                An overview of your income, spending, and monthly budgets.
+            </p>
+        </div>
+
+        <div class="dashboard-month">
+            @CurrentMonthName @DateTime.Today.Year
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+
+    @if (isLoading)
+    {
+        <div class="dashboard-loading">
+            <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+
+            <p class="text-muted mb-0">Loading your dashboard...</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4 mb-4">
+            <div class="col-sm-6 col-xl-3">
+                <div class="summary-card">
+                    <div class="summary-icon balance-icon">
+                        <span class="bi bi-wallet2"></span>
+                    </div>
+
+                    <div class="summary-label">Current Balance</div>
+
+                    <div class="summary-value
+                        @(CurrentBalance >= 0
+                              ? "text-success"
+                              : "text-danger")">
+                        @CurrentBalance.ToString("C")
+                    </div>
+
+                    <div class="summary-note">
+                        All recorded transactions
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-xl-3">
+                <div class="summary-card">
+                    <div class="summary-icon income-icon">
+                        <span class="bi bi-arrow-up-right"></span>
+                    </div>
+
+                    <div class="summary-label">Income This Month</div>
+
+                    <div class="summary-value text-success">
+                        @CurrentMonthIncome.ToString("C")
+                    </div>
+
+                    <div class="summary-note">
+                        @CurrentMonthIncomeCount transaction(s)
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-xl-3">
+                <div class="summary-card">
+                    <div class="summary-icon expense-icon">
+                        <span class="bi bi-arrow-down-right"></span>
+                    </div>
+
+                    <div class="summary-label">Expenses This Month</div>
+
+                    <div class="summary-value text-danger">
+                        @CurrentMonthExpenses.ToString("C")
+                    </div>
+
+                    <div class="summary-note">
+                        @CurrentMonthExpenseCount transaction(s)
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-xl-3">
+                <div class="summary-card">
+                    <div class="summary-icon budget-icon">
+                        <span class="bi bi-piggy-bank"></span>
+                    </div>
+
+                    <div class="summary-label">Budget Remaining</div>
+
+                    <div class="summary-value
+                        @(TotalBudgetRemaining >= 0
+                              ? "text-primary"
+                              : "text-danger")">
+                        @TotalBudgetRemaining.ToString("C")
+                    </div>
+
+                    <div class="summary-note">
+                        @if (CurrentMonthBudgetTotal == 0)
+                        {
+                            <span>No budgets set this month</span>
+                        }
+                        else
+                        {
+                            <span>
+                                @CurrentMonthExpenses.ToString("C")
+                                of @CurrentMonthBudgetTotal.ToString("C")
+                            </span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-xl-8">
+                <div class="dashboard-card h-100">
+                    <div class="card-heading">
+                        <div>
+                            <h2>Six-Month Report</h2>
+
+                            <p>
+                                Monthly income compared with monthly expenses.
+                            </p>
+                        </div>
+                    </div>
+
+                    @if (monthlyReports.All(report =>
+                        report.Income == 0 && report.Expenses == 0))
+                    {
+                        <div class="empty-state">
+                            <span class="bi bi-bar-chart"></span>
+
+                            <p>
+                                Add transactions to see your monthly report.
+                            </p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="chart-legend">
+                            <span>
+                                <span class="legend-dot income-dot"></span>
+                                Income
+                            </span>
+
+                            <span>
+                                <span class="legend-dot expense-dot"></span>
+                                Expenses
+                            </span>
+                        </div>
+
+                        <div class="monthly-chart">
+                            @foreach (var report in monthlyReports)
+                            {
+                                <div class="month-column">
+                                    <div class="month-values">
+                                        <span class="income-value">
+                                            @FormatShortCurrency(report.Income)
+                                        </span>
+
+                                        <span class="expense-value">
+                                            @FormatShortCurrency(report.Expenses)
+                                        </span>
+                                    </div>
+
+                                    <div class="bar-area">
+                                        <div class="chart-bar income-bar" title="Income: @report.Income.ToString("C")"
+                                             style="@GetBarHeightStyle(report.Income)">
+                                        </div>
+
+                                        <div class="chart-bar expense-bar" title="Expenses: @report.Expenses.ToString("C")"
+                                             style="@GetBarHeightStyle(report.Expenses)">
+                                        </div>
+                                    </div>
+
+                                    <div class="month-label">
+                                        @report.MonthLabel
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="dashboard-card h-100">
+                    <div class="card-heading">
+                        <div>
+                            <h2>Spending by Category</h2>
+
+                            <p>
+                                Expenses during @CurrentMonthName.
+                            </p>
+                        </div>
+                    </div>
+
+                    @if (categorySpending.Count == 0)
+                    {
+                        <div class="empty-state">
+                            <span class="bi bi-pie-chart"></span>
+
+                            <p>
+                                No expenses have been recorded this month.
+                            </p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="category-chart">
+                            @foreach (var row in categorySpending)
+                            {
+                                <div class="category-row">
+                                    <div class="category-row-heading">
+                                        <span>@row.CategoryName</span>
+
+                                        <strong>@row.Amount.ToString("C")</strong>
+                                    </div>
+
+                                    <div class="category-track">
+                                        <div class="category-fill" style="@GetWidthStyle(row.Percentage)">
+                                        </div>
+                                    </div>
+
+                                    <div class="category-percentage">
+                                        @row.Percentage.ToString("0")%
+                                        of monthly expenses
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-xl-7">
+                <div class="dashboard-card h-100">
+                    <div class="card-heading card-heading-row">
+                        <div>
+                            <h2>Recent Transactions</h2>
+
+                            <p>Your latest financial activity.</p>
+                        </div>
+
+                        <a href="/transactions" class="btn btn-sm btn-outline-primary">
+                            View All
+                        </a>
+                    </div>
+
+                    @if (recentTransactions.Count == 0)
+                    {
+                        <div class="empty-state">
+                            <span class="bi bi-receipt"></span>
+
+                            <p>You have not recorded any transactions yet.</p>
+
+                            <a href="/transactions" class="btn btn-primary btn-sm">
+                                Add Transaction
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table dashboard-table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Description</th>
+                                        <th>Category</th>
+                                        <th>Date</th>
+                                        <th class="text-end">Amount</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @foreach (var transaction in recentTransactions)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="transaction-name">
+                                                    @transaction.Description
+                                                </div>
+
+                                                <span class="badge
+                                                    @(transaction.Type ==
+                                                            TransactionType.Income
+                                                            ? "text-bg-success"
+                                                            : "text-bg-danger")">
+                                                    @transaction.Type
+                                                </span>
+                                            </td>
+
+                                            <td>
+                                                @(transaction.Category?.Name
+                                                    ?? "No category")
+                                            </td>
+
+                                            <td>
+                                                @(transaction.Date.ToString("MMM d, yyyy"))
+                                            </td>
+
+                                            <td class="text-end fw-semibold
+                                                @(transaction.Type ==
+                                                    TransactionType.Income
+                                                    ? "text-success"
+                                                    : "text-danger")">
+                                                @(transaction.Type ==
+                                                    TransactionType.Income
+                                                    ? "+"
+                                                    : "-")@transaction.Amount.ToString("C")
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="col-xl-5">
+                <div class="dashboard-card h-100">
+                    <div class="card-heading card-heading-row">
+                        <div>
+                            <h2>Budget Progress</h2>
+
+                            <p>
+                                Your category budgets for @CurrentMonthName.
+                            </p>
+                        </div>
+
+                        <a href="/budgets" class="btn btn-sm btn-outline-primary">
+                            Manage
+                        </a>
+                    </div>
+
+                    @if (budgetProgress.Count == 0)
+                    {
+                        <div class="empty-state">
+                            <span class="bi bi-wallet2"></span>
+
+                            <p>
+                                You have not created any budgets for this month.
+                            </p>
+
+                            <a href="/budgets" class="btn btn-primary btn-sm">
+                                Create Budget
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="budget-list">
+                            @foreach (var row in budgetProgress)
+                            {
+                                <div class="budget-progress-row">
+                                    <div class="budget-progress-heading">
+                                        <div>
+                                            <strong>@row.CategoryName</strong>
+
+                                            <div class="small text-muted">
+                                                @row.Spent.ToString("C")
+                                                spent of
+                                                @row.BudgetAmount.ToString("C")
+                                            </div>
+                                        </div>
+
+                                        <span class="budget-status
+                                            @(row.IsOverBudget
+                                                    ? "text-danger"
+                                                    : "text-success")">
+                                            @if (row.IsOverBudget)
+                                            {
+                                                <span>
+                                                    @Math.Abs(row.Remaining)
+                                                    .ToString("C")
+                                                    over
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span>
+                                                    @row.Remaining.ToString("C")
+                                                    left
+                                                </span>
+                                            }
+                                        </span>
+                                    </div>
+
+                                    <div class="progress budget-progress-bar">
+                                        <div class="progress-bar
+                                            @(row.IsOverBudget
+                                                  ? "bg-danger"
+                                                  : row.PercentageUsed >= 80
+                                                      ? "bg-warning"
+                                                      : "bg-success")" role="progressbar"
+                                             style="@GetWidthStyle(row.ProgressWidth)" aria-valuenow="@row.ProgressWidth"
+                                             aria-valuemin="0" aria-valuemax="100">
+                                        </div>
+                                    </div>
+
+                                    <div class="budget-percent">
+                                        @row.PercentageUsed.ToString("0")% used
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .dashboard-container {
+        padding: 2rem;
+        max-width: 1600px;
+    }
+
+    .dashboard-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .dashboard-heading h1 {
+        margin: 0 0 0.35rem;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .dashboard-month {
+        padding: 0.65rem 1rem;
+        border: 1px solid #dbe2ea;
+        border-radius: 0.75rem;
+        background: #ffffff;
+        color: #475569;
+        font-weight: 600;
+    }
+
+    .dashboard-loading {
+        min-height: 350px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .summary-card,
+    .dashboard-card {
+        height: 100%;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        background: #ffffff;
+        box-shadow: 0 5px 20px rgba(15, 23, 42, 0.05);
+    }
+
+    .summary-card {
+        padding: 1.35rem;
+    }
+
+    .summary-icon {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        border-radius: 0.8rem;
+        font-size: 1.15rem;
+    }
+
+    .balance-icon {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .income-icon {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .expense-icon {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .budget-icon {
+        background: #ede9fe;
+        color: #6d28d9;
+    }
+
+    .summary-label {
+        margin-bottom: 0.3rem;
+        color: #64748b;
+        font-size: 0.82rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .summary-value {
+        margin-bottom: 0.35rem;
+        font-size: 1.75rem;
+        font-weight: 750;
+    }
+
+    .summary-note {
+        color: #94a3b8;
+        font-size: 0.82rem;
+    }
+
+    .dashboard-card {
+        padding: 1.4rem;
+    }
+
+    .card-heading {
+        margin-bottom: 1.25rem;
+    }
+
+    .card-heading-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .card-heading h2 {
+        margin: 0 0 0.25rem;
+        color: #0f172a;
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+
+    .card-heading p {
+        margin: 0;
+        color: #64748b;
+        font-size: 0.875rem;
+    }
+
+    .empty-state {
+        min-height: 190px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        color: #64748b;
+        text-align: center;
+    }
+
+    .empty-state>.bi {
+        color: #94a3b8;
+        font-size: 2rem;
+    }
+
+    .empty-state p {
+        margin: 0;
+    }
+
+    .chart-legend {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        color: #64748b;
+        font-size: 0.8rem;
+    }
+
+    .legend-dot {
+        width: 9px;
+        height: 9px;
+        display: inline-block;
+        margin-right: 0.3rem;
+        border-radius: 50%;
+    }
+
+    .income-dot,
+    .income-bar {
+        background: #22c55e;
+    }
+
+    .expense-dot,
+    .expense-bar {
+        background: #ef4444;
+    }
+
+    .monthly-chart {
+        min-height: 280px;
+        display: grid;
+        grid-template-columns: repeat(6, minmax(70px, 1fr));
+        align-items: end;
+        gap: 1rem;
+        padding-top: 1rem;
+        overflow-x: auto;
+    }
+
+    .month-column {
+        min-width: 70px;
+        text-align: center;
+    }
+
+    .month-values {
+        min-height: 38px;
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 0.4rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .income-value {
+        color: #15803d;
+    }
+
+    .expense-value {
+        color: #b91c1c;
+    }
+
+    .bar-area {
+        height: 190px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 6px;
+        border-bottom: 1px solid #cbd5e1;
+    }
+
+    .chart-bar {
+        width: 24px;
+        min-height: 2px;
+        border-radius: 5px 5px 0 0;
+        transition: opacity 0.15s ease;
+    }
+
+    .chart-bar:hover {
+        opacity: 0.75;
+    }
+
+    .month-label {
+        padding-top: 0.6rem;
+        color: #64748b;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .category-chart,
+    .budget-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.15rem;
+    }
+
+    .category-row-heading,
+    .budget-progress-heading {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.45rem;
+    }
+
+    .category-row-heading {
+        color: #334155;
+        font-size: 0.87rem;
+    }
+
+    .category-track {
+        height: 9px;
+        overflow: hidden;
+        border-radius: 99px;
+        background: #e2e8f0;
+    }
+
+    .category-fill {
+        height: 100%;
+        border-radius: 99px;
+        background: #3b82f6;
+    }
+
+    .category-percentage,
+    .budget-percent {
+        margin-top: 0.35rem;
+        color: #94a3b8;
+        font-size: 0.72rem;
+    }
+
+    .dashboard-table {
+        margin-bottom: 0;
+    }
+
+    .dashboard-table thead th {
+        border-bottom-color: #e2e8f0;
+        color: #64748b;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .dashboard-table td {
+        padding-top: 0.9rem;
+        padding-bottom: 0.9rem;
+        border-bottom-color: #f1f5f9;
+        color: #475569;
+    }
+
+    .transaction-name {
+        margin-bottom: 0.25rem;
+        color: #1e293b;
+        font-weight: 600;
+    }
+
+    .budget-progress-row {
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .budget-progress-row:last-child {
+        padding-bottom: 0;
+        border-bottom: 0;
+    }
+
+    .budget-progress-heading strong {
+        color: #1e293b;
+    }
+
+    .budget-status {
+        white-space: nowrap;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .budget-progress-bar {
+        height: 10px;
+    }
+
+    @@media (max-width: 767px) {
+        .dashboard-container {
+            padding: 1rem;
+        }
+
+        .dashboard-heading {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .dashboard-heading h1 {
+            font-size: 1.6rem;
+        }
+
+        .dashboard-month {
+            width: 100%;
+            text-align: center;
+        }
+
+        .monthly-chart {
+            grid-template-columns: repeat(6, 75px);
+        }
+    }
+</style>
+
+@code {
+    private List<Transaction> allTransactions = [];
+    private List<Transaction> recentTransactions = [];
+    private List<CategorySpendingRow> categorySpending = [];
+    private List<BudgetProgressRow> budgetProgress = [];
+    private List<MonthlyReportRow> monthlyReports = [];
+
+    private string? currentUserId;
+    private string? errorMessage;
+
+    private bool isLoading = true;
+
+    private DateTime CurrentMonthStart =>
+        new(DateTime.Today.Year, DateTime.Today.Month, 1);
+
+    private DateTime NextMonthStart =>
+        CurrentMonthStart.AddMonths(1);
+
+    private string CurrentMonthName =>
+        CultureInfo.CurrentCulture.DateTimeFormat
+            .GetMonthName(DateTime.Today.Month);
+
+    private decimal CurrentBalance =>
+        allTransactions
+            .Where(transaction =>
+                transaction.Type == TransactionType.Income)
+            .Sum(transaction => transaction.Amount)
+        -
+        allTransactions
+            .Where(transaction =>
+                transaction.Type == TransactionType.Expense)
+            .Sum(transaction => transaction.Amount);
+
+    private decimal CurrentMonthIncome =>
+        allTransactions
+            .Where(transaction =>
+                transaction.Type == TransactionType.Income &&
+                transaction.Date >= CurrentMonthStart &&
+                transaction.Date < NextMonthStart)
+            .Sum(transaction => transaction.Amount);
+
+    private decimal CurrentMonthExpenses =>
+        allTransactions
+            .Where(transaction =>
+                transaction.Type == TransactionType.Expense &&
+                transaction.Date >= CurrentMonthStart &&
+                transaction.Date < NextMonthStart)
+            .Sum(transaction => transaction.Amount);
+
+    private int CurrentMonthIncomeCount =>
+        allTransactions.Count(transaction =>
+            transaction.Type == TransactionType.Income &&
+            transaction.Date >= CurrentMonthStart &&
+            transaction.Date < NextMonthStart);
+
+    private int CurrentMonthExpenseCount =>
+        allTransactions.Count(transaction =>
+            transaction.Type == TransactionType.Expense &&
+            transaction.Date >= CurrentMonthStart &&
+            transaction.Date < NextMonthStart);
+
+    private decimal CurrentMonthBudgetTotal =>
+        budgetProgress.Sum(row => row.BudgetAmount);
+
+    private decimal TotalBudgetRemaining =>
+        CurrentMonthBudgetTotal - CurrentMonthExpenses;
+
+    private decimal MonthlyChartMaximum =>
+        Math.Max(
+            monthlyReports
+                .SelectMany(report => new[]
+                {
+                    report.Income,
+                    report.Expenses
+                })
+                .DefaultIfEmpty(0)
+                .Max(),
+            1);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authenticationState =
+                await AuthenticationStateProvider
+                    .GetAuthenticationStateAsync();
+
+            var user =
+                await UserManager.GetUserAsync(authenticationState.User);
+
+            if (user is null)
+            {
+                errorMessage =
+                    "You must be signed in to view the dashboard.";
+
+                return;
+            }
+
+            currentUserId = user.Id;
+
+            await LoadDashboardAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage =
+                $"Unable to load the dashboard: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadDashboardAsync()
+    {
+        if (string.IsNullOrWhiteSpace(currentUserId))
+        {
+            return;
+        }
+
+        await using var db =
+            await DbFactory.CreateDbContextAsync();
+
+        allTransactions = await db.Transactions
+            .AsNoTracking()
+            .Include(transaction => transaction.Category)
+            .Where(transaction =>
+                transaction.UserId == currentUserId)
+            .OrderByDescending(transaction => transaction.Date)
+            .ThenByDescending(transaction => transaction.Id)
+            .ToListAsync();
+
+        recentTransactions = allTransactions
+            .Take(5)
+            .ToList();
+
+        BuildCategorySpending();
+        BuildMonthlyReports();
+
+        var budgets = await db.Budgets
+            .AsNoTracking()
+            .Include(budget => budget.Category)
+            .Where(budget =>
+                budget.UserId == currentUserId &&
+                budget.Month == DateTime.Today.Month &&
+                budget.Year == DateTime.Today.Year)
+            .OrderBy(budget => budget.Category!.Name)
+            .ToListAsync();
+
+        var spendingByCategory = allTransactions
+            .Where(transaction =>
+                transaction.Type == TransactionType.Expense &&
+                transaction.Date >= CurrentMonthStart &&
+                transaction.Date < NextMonthStart)
+            .GroupBy(transaction => transaction.CategoryId)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Sum(transaction => transaction.Amount));
+
+        budgetProgress = budgets
+            .Select(budget => new BudgetProgressRow
+            {
+                CategoryName =
+                    budget.Category?.Name ?? "Unknown category",
+
+                BudgetAmount = budget.Amount,
+
+                Spent = spendingByCategory.GetValueOrDefault(
+                    budget.CategoryId,
+                    0)
+            })
+            .ToList();
+    }
+
+    private void BuildCategorySpending()
+    {
+        var groupedSpending = allTransactions
+            .Where(transaction =>
+                transaction.Type == TransactionType.Expense &&
+                transaction.Date >= CurrentMonthStart &&
+                transaction.Date < NextMonthStart)
+            .GroupBy(transaction =>
+                transaction.Category?.Name ?? "Uncategorized")
+            .Select(group => new
+            {
+                CategoryName = group.Key,
+                Amount = group.Sum(transaction => transaction.Amount)
+            })
+            .OrderByDescending(row => row.Amount)
+            .ToList();
+
+        var totalExpenses =
+            groupedSpending.Sum(row => row.Amount);
+
+        categorySpending = groupedSpending
+            .Select(row => new CategorySpendingRow
+            {
+                CategoryName = row.CategoryName,
+                Amount = row.Amount,
+                Percentage = totalExpenses <= 0
+                    ? 0
+                    : row.Amount / totalExpenses * 100
+            })
+            .ToList();
+    }
+
+    private void BuildMonthlyReports()
+    {
+        monthlyReports = [];
+
+        for (var monthsBack = 5; monthsBack >= 0; monthsBack--)
+        {
+            var monthStart =
+                CurrentMonthStart.AddMonths(-monthsBack);
+
+            var monthEnd =
+                monthStart.AddMonths(1);
+
+            monthlyReports.Add(new MonthlyReportRow
+            {
+                MonthLabel = monthStart.ToString("MMM"),
+
+                Income = allTransactions
+                    .Where(transaction =>
+                        transaction.Type == TransactionType.Income &&
+                        transaction.Date >= monthStart &&
+                        transaction.Date < monthEnd)
+                    .Sum(transaction => transaction.Amount),
+
+                Expenses = allTransactions
+                    .Where(transaction =>
+                        transaction.Type == TransactionType.Expense &&
+                        transaction.Date >= monthStart &&
+                        transaction.Date < monthEnd)
+                    .Sum(transaction => transaction.Amount)
+            });
+        }
+    }
+
+    private string GetBarHeightStyle(decimal amount)
+    {
+        var percentage =
+            amount <= 0
+                ? 0
+                : amount / MonthlyChartMaximum * 100;
+
+        return $"height: {Math.Max(percentage, amount > 0 ? 2 : 0):0.##}%;";
+    }
+
+    private static string GetWidthStyle(decimal percentage)
+    {
+        var limitedPercentage =
+            Math.Clamp(percentage, 0, 100);
+
+        return $"width: {limitedPercentage:0.##}%;";
+    }
+
+    private static string FormatShortCurrency(decimal amount)
+    {
+        if (amount >= 1_000_000)
+        {
+            return $"${amount / 1_000_000:0.#}M";
+        }
+
+        if (amount >= 1_000)
+        {
+            return $"${amount / 1_000:0.#}K";
+        }
+
+        return amount.ToString("C0");
+    }
+
+    private sealed class CategorySpendingRow
+    {
+        public string CategoryName { get; init; } = string.Empty;
+
+        public decimal Amount { get; init; }
+
+        public decimal Percentage { get; init; }
+    }
+
+    private sealed class MonthlyReportRow
+    {
+        public string MonthLabel { get; init; } = string.Empty;
+
+        public decimal Income { get; init; }
+
+        public decimal Expenses { get; init; }
+    }
+
+    private sealed class BudgetProgressRow
+    {
+        public string CategoryName { get; init; } = string.Empty;
+
+        public decimal BudgetAmount { get; init; }
+
+        public decimal Spent { get; init; }
+
+        public decimal Remaining =>
+            BudgetAmount - Spent;
+
+        public decimal PercentageUsed =>
+            BudgetAmount <= 0
+                ? 0
+                : Spent / BudgetAmount * 100;
+
+        public decimal ProgressWidth =>
+            Math.Min(PercentageUsed, 100);
+
+        public bool IsOverBudget =>
+            Spent > BudgetAmount;
+    }
+}

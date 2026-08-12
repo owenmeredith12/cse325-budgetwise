@@ -1,0 +1,345 @@
+@page "/categories"
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using cse325_budgetwise.Data
+@using cse325_budgetwise.Models
+
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>Categories</PageTitle>
+
+<div class="container py-4">
+    <div class="mb-4">
+        <h1>Categories</h1>
+        <p class="text-muted">
+            Create categories to organize your income and expenses.
+        </p>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(successMessage))
+    {
+        <div class="alert alert-success" role="alert">
+            @successMessage
+        </div>
+    }
+
+    @if (isLoading)
+    {
+        <p>Loading categories...</p>
+    }
+    else
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Add Category</h2>
+
+                <EditForm Model="categoryForm" OnValidSubmit="AddCategoryAsync">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="text-danger mb-3" />
+
+                    <div class="row g-3">
+                        <div class="col-md-7">
+                            <label for="categoryName" class="form-label">
+                                Category name
+                            </label>
+
+                            <InputText id="categoryName" class="form-control" @bind-Value="categoryForm.Name"
+                                       placeholder="Example: Groceries" />
+
+                            <ValidationMessage For="() => categoryForm.Name" class="text-danger" />
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="categoryType" class="form-label">
+                                Type
+                            </label>
+
+                            <InputSelect id="categoryType" class="form-select" @bind-Value="categoryForm.Type">
+                                <option value="@TransactionType.Expense">
+                                    Expense
+                                </option>
+                                <option value="@TransactionType.Income">
+                                    Income
+                                </option>
+                            </InputSelect>
+
+                            <ValidationMessage For="() => categoryForm.Type" class="text-danger" />
+                        </div>
+
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100" disabled="@isSaving">
+                                @(isSaving ? "Adding..." : "Add")
+                            </button>
+                        </div>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Your Categories</h2>
+
+                @if (categories.Count == 0)
+                {
+                    <div class="alert alert-light border mb-0">
+                        You have not created any categories yet.
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var category in categories)
+                                {
+                                    <tr>
+                                        <td>@category.Name</td>
+
+                                        <td>
+                                            @if (category.Type == TransactionType.Income)
+                                            {
+                                                <span class="badge text-bg-success">
+                                                    Income
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge text-bg-danger">
+                                                    Expense
+                                                </span>
+                                            }
+                                        </td>
+
+                                        <td class="text-end">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" disabled="@isDeleting"
+                                                    @onclick="() => DeleteCategoryAsync(category.Id)">
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private readonly CategoryFormModel categoryForm = new();
+    private List<Category> categories = [];
+
+    private string? currentUserId;
+    private string? errorMessage;
+    private string? successMessage;
+
+    private bool isLoading = true;
+    private bool isSaving;
+    private bool isDeleting;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authenticationState =
+                await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+            var user = await UserManager.GetUserAsync(authenticationState.User);
+
+            if (user is null)
+            {
+                errorMessage = "You must be signed in to manage categories.";
+                return;
+            }
+
+            currentUserId = user.Id;
+
+            await LoadCategoriesAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Unable to load categories: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadCategoriesAsync()
+    {
+        if (string.IsNullOrWhiteSpace(currentUserId))
+        {
+            return;
+        }
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+
+        categories = await db.Categories
+            .AsNoTracking()
+            .Where(category => category.UserId == currentUserId)
+            .OrderBy(category => category.Type)
+            .ThenBy(category => category.Name)
+            .ToListAsync();
+    }
+
+    private async Task AddCategoryAsync()
+    {
+        ClearMessages();
+
+        if (string.IsNullOrWhiteSpace(currentUserId))
+        {
+            errorMessage = "You must be signed in to add a category.";
+            return;
+        }
+
+        var categoryName = categoryForm.Name.Trim();
+
+        if (string.IsNullOrWhiteSpace(categoryName))
+        {
+            errorMessage = "Enter a category name.";
+            return;
+        }
+
+        isSaving = true;
+
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+
+            var normalizedName = categoryName.ToLower();
+
+            var alreadyExists = await db.Categories.AnyAsync(category =>
+                category.UserId == currentUserId &&
+                category.Type == categoryForm.Type &&
+                category.Name.ToLower() == normalizedName);
+
+            if (alreadyExists)
+            {
+                errorMessage =
+                    "You already have a category with that name and type.";
+
+                return;
+            }
+
+            var category = new Category
+            {
+                Name = categoryName,
+                Type = categoryForm.Type,
+                UserId = currentUserId
+            };
+
+            db.Categories.Add(category);
+            await db.SaveChangesAsync();
+
+            categoryForm.Name = string.Empty;
+            categoryForm.Type = TransactionType.Expense;
+
+            successMessage = "Category added successfully.";
+
+            await LoadCategoriesAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Unable to add category: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task DeleteCategoryAsync(int categoryId)
+    {
+        ClearMessages();
+
+        if (string.IsNullOrWhiteSpace(currentUserId))
+        {
+            errorMessage = "You must be signed in to delete a category.";
+            return;
+        }
+
+        isDeleting = true;
+
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+
+            var category = await db.Categories.FirstOrDefaultAsync(category =>
+                category.Id == categoryId &&
+                category.UserId == currentUserId);
+
+            if (category is null)
+            {
+                errorMessage = "The category could not be found.";
+                return;
+            }
+
+            db.Categories.Remove(category);
+            await db.SaveChangesAsync();
+
+            successMessage = "Category deleted successfully.";
+
+            await LoadCategoriesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            errorMessage =
+                "This category cannot be deleted because it is being used by one or more transactions.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Unable to delete category: {ex.Message}";
+        }
+        finally
+        {
+            isDeleting = false;
+        }
+    }
+
+    private void ClearMessages()
+    {
+        errorMessage = null;
+        successMessage = null;
+    }
+
+    private sealed class CategoryFormModel
+    {
+        [Required(ErrorMessage = "Enter a category name.")]
+        [StringLength(
+            50,
+            MinimumLength = 2,
+            ErrorMessage = "The category name must be between 2 and 50 characters.")]
+        public string Name { get; set; } = string.Empty;
+
+        [Required]
+        public TransactionType Type { get; set; } =
+            TransactionType.Expense;
+    }
+}

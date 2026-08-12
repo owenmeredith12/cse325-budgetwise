@@ -1,0 +1,26 @@
+.page {
+    position: relative;
+    display: flex;
+    min-height: 100vh;
+    background: #f8fafc;
+}
+
+.sidebar {
+    background: #111827;
+    border-right: 1px solid #1f2937;
+}
+
+main {
+    flex: 1;
+    background: #f8fafc;
+}
+
+.top-row {
+    height: 64px;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 1.5rem;
+}
