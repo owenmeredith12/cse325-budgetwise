@@ -5,6 +5,7 @@
 @using System.ComponentModel.DataAnnotations
 @using System.Globalization
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
@@ -18,6 +19,7 @@
 <PageTitle>Budgets</PageTitle>
 
 <div class="container py-4">
+
     <div class="mb-4">
         <h1>Budgets</h1>
         <p class="text-muted">
@@ -45,8 +47,10 @@
     }
     else
     {
+        <!-- ADD / EDIT BUDGET -->
         <div class="card shadow-sm mb-4">
             <div class="card-body">
+
                 <h2 class="h5 mb-3">
                     @(IsEditing ? "Edit Budget" : "Add Budget")
                 </h2>
@@ -54,8 +58,7 @@
                 @if (expenseCategories.Count == 0)
                 {
                     <div class="alert alert-warning mb-0">
-                        You need at least one expense category before creating
-                        a budget.
+                        You need at least one expense category before creating a budget.
 
                         <a href="/categories" class="alert-link">
                             Create an expense category
@@ -64,18 +67,23 @@
                 }
                 else
                 {
-                    <EditForm Model="budgetForm" OnValidSubmit="SaveBudgetAsync">
+                    <EditForm Model="budgetForm" OnValidSubmit="SaveBudgetAsync" FormName="BudgetForm">
+
                         <DataAnnotationsValidator />
                         <ValidationSummary class="text-danger mb-3" />
 
                         <div class="row g-3">
+
                             <div class="col-md-4">
                                 <label for="budgetCategory" class="form-label">
                                     Expense category
                                 </label>
 
                                 <InputSelect id="budgetCategory" class="form-select" @bind-Value="budgetForm.CategoryId">
-                                    <option value="0">Select a category</option>
+
+                                    <option value="0">
+                                        Select a category
+                                    </option>
 
                                     @foreach (var category in expenseCategories)
                                     {
@@ -83,6 +91,7 @@
                                             @category.Name
                                         </option>
                                     }
+
                                 </InputSelect>
 
                                 <ValidationMessage For="() => budgetForm.CategoryId" class="text-danger" />
@@ -105,12 +114,14 @@
                                 </label>
 
                                 <InputSelect id="budgetMonth" class="form-select" @bind-Value="budgetForm.Month">
+
                                     @foreach (var month in Enumerable.Range(1, 12))
                                     {
                                         <option value="@month">
                                             @GetMonthName(month)
                                         </option>
                                     }
+
                                 </InputSelect>
 
                                 <ValidationMessage For="() => budgetForm.Month" class="text-danger" />
@@ -122,20 +133,28 @@
                                 </label>
 
                                 <InputSelect id="budgetYear" class="form-select" @bind-Value="budgetForm.Year">
+
                                     @foreach (var year in AvailableYears)
                                     {
-                                        <option value="@year">@year</option>
+                                        <option value="@year">
+                                            @year
+                                        </option>
                                     }
+
                                 </InputSelect>
 
                                 <ValidationMessage For="() => budgetForm.Year" class="text-danger" />
                             </div>
 
                             <div class="col-12 d-flex gap-2">
+
                                 <button type="submit" class="btn btn-primary" disabled="@isSaving">
+
                                     @if (isSaving)
                                     {
-                                        @(IsEditing ? "Saving..." : "Adding...")
+                                        @(IsEditing
+                                            ? "Saving..."
+                                            : "Adding...")
                                     }
                                     else
                                     {
@@ -143,6 +162,7 @@
                                             ? "Save Changes"
                                             : "Add Budget")
                                     }
+
                                 </button>
 
                                 @if (IsEditing)
@@ -152,36 +172,57 @@
                                         Cancel
                                     </button>
                                 }
+
                             </div>
+
                         </div>
+
                     </EditForm>
                 }
+
             </div>
         </div>
 
+
+        <!-- BUDGET LIST -->
         <div class="card shadow-sm">
             <div class="card-body">
-                <div class="d-flex flex-wrap justify-content-between
-                    align-items-center gap-3 mb-3">
-                    <h2 class="h5 mb-0">Your Budgets</h2>
+
+                <div class="d-flex flex-wrap
+                    justify-content-between
+                    align-items-center
+                    gap-3 mb-3">
+
+                    <h2 class="h5 mb-0">
+                        Your Budgets
+                    </h2>
 
                     <div class="d-flex gap-2">
+
                         <InputSelect class="form-select" @bind-Value="filterMonth" @bind-Value:after="LoadBudgetsAsync">
+
                             @foreach (var month in Enumerable.Range(1, 12))
                             {
                                 <option value="@month">
                                     @GetMonthName(month)
                                 </option>
                             }
+
                         </InputSelect>
 
                         <InputSelect class="form-select" @bind-Value="filterYear" @bind-Value:after="LoadBudgetsAsync">
+
                             @foreach (var year in AvailableYears)
                             {
-                                <option value="@year">@year</option>
+                                <option value="@year">
+                                    @year
+                                </option>
                             }
+
                         </InputSelect>
+
                     </div>
+
                 </div>
 
                 @if (budgetRows.Count == 0)
@@ -194,13 +235,19 @@
                 else
                 {
                     <div class="row g-3">
+
                         @foreach (var row in budgetRows)
                         {
                             <div class="col-lg-6">
+
                                 <div class="card h-100 border">
                                     <div class="card-body">
-                                        <div class="d-flex justify-content-between
-                                            align-items-start gap-3 mb-3">
+
+                                        <div class="d-flex
+                                            justify-content-between
+                                            align-items-start
+                                            gap-3 mb-3">
+
                                             <div>
                                                 <h3 class="h5 mb-1">
                                                     @row.Budget.Category?.Name
@@ -213,31 +260,32 @@
                                             </div>
 
                                             <div class="d-flex gap-2">
-                                                <button type="button" class="btn btn-sm
-                                                    btn-outline-primary" disabled="@(isSaving || isDeleting)"
-                                                        @onclick="() =>
-                                                                                                                                                                                                                                                                                                                                                                                                            StartEdit(row.Budget)">
-Edit
-</button>
 
-                                                <button type="button" class="btn btn-sm
-                                                    btn-outline-danger" disabled="@(isSaving || isDeleting)"
-                                                        @onclick="() =>
-                                                                                                                                                                                                                                                                                                                                                                                                            DeleteBudgetAsync(
-                                                                                                                                                                                                                                                                                                                                                                                                                row.Budget.Id)">
-Delete
-</button>
+                                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                                        disabled="@(isSaving || isDeleting)" @onclick="() => StartEdit(row.Budget)">
+                                                    Edit
+                                                </button>
+
+                                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                                        disabled="@(isSaving || isDeleting)"
+                                                        @onclick="() => DeleteBudgetAsync(row.Budget.Id)">
+                                                    Delete
+                                                </button>
+
                                             </div>
+
                                         </div>
 
+
                                         <div class="row g-3 mb-3">
+
                                             <div class="col-4">
                                                 <div class="text-muted small">
                                                     Budget
                                                 </div>
 
                                                 <div class="fw-semibold">
-                                                    @row.Budget.Amount.ToString("C")
+                                                    @(row.Budget.Amount.ToString("C"))
                                                 </div>
                                             </div>
 
@@ -247,7 +295,7 @@ Delete
                                                 </div>
 
                                                 <div class="fw-semibold">
-                                                    @row.Spent.ToString("C")
+                                                    @(row.Spent.ToString("C"))
                                                 </div>
                                             </div>
 
@@ -258,32 +306,40 @@ Delete
                                                         : "Over Budget")
                                                 </div>
 
-                                                <div class="fw-semibold
-                                                    @(row.Remaining >= 0
-                                                              ? "text-success"
-                                                              : "text-danger")">
+                                                <div class="fw-semibold @(row.Remaining >= 0
+                                                                                                         ? "text-success"
+                                                                                                         : "text-danger")">
+
                                                     @(Math.Abs(row.Remaining).ToString("C"))
+
                                                 </div>
                                             </div>
+
                                         </div>
+
 
                                         <div class="progress" style="height: 12px;">
-                                            <div class="progress-bar
-                                                @(row.IsOverBudget
-                                                          ? "bg-danger"
-                                                          : row.PercentageUsed >= 80
-                                                              ? "bg-warning"
-                                                              : "bg-success")" role="progressbar"
-                                                 style="width: @row.ProgressWidth%;" aria-valuenow="@row.ProgressWidth"
+
+                                            <div class="progress-bar @(row.IsOverBudget
+                                                                                                     ? "bg-danger"
+                                                                                                     : row.PercentageUsed >= 80
+                                                                                                         ? "bg-warning"
+                                                                                                         : "bg-success")" role="progressbar"
+                                                 style="@GetProgressStyle(row.ProgressWidth)" aria-valuenow="@row.ProgressWidth"
                                                  aria-valuemin="0" aria-valuemax="100">
                                             </div>
+
                                         </div>
 
-                                        <div class="d-flex justify-content-between
-                                            mt-2 small text-muted">
+
+                                        <div class="d-flex
+                                            justify-content-between
+                                            mt-2
+                                            small
+                                            text-muted">
+
                                             <span>
-                                                @row.PercentageUsed.ToString("0")%
-                                                used
+                                                @(row.PercentageUsed.ToString("0"))% used
                                             </span>
 
                                             @if (row.IsOverBudget)
@@ -295,29 +351,38 @@ Delete
                                             else
                                             {
                                                 <span>
-                                                    @row.Remaining.ToString("C")
-                                                    available
+                                                    @(row.Remaining.ToString("C")) available
                                                 </span>
                                             }
+
                                         </div>
+
                                     </div>
                                 </div>
+
                             </div>
                         }
+
                     </div>
                 }
+
             </div>
         </div>
     }
+
 </div>
 
+
 @code {
-    private BudgetFormModel budgetForm = new();
+
+    // Form binding for normal server POSTs as well as interactive use.
+    [SupplyParameterFromForm(FormName = "BudgetForm")]
+    private BudgetFormModel budgetForm { get; set; } = new();
+
 
     private List<Category> expenseCategories = [];
     private List<BudgetRow> budgetRows = [];
 
-    private int? editingBudgetId;
     private string? currentUserId;
     private string? errorMessage;
     private string? successMessage;
@@ -329,23 +394,32 @@ Delete
     private int filterMonth = DateTime.Today.Month;
     private int filterYear = DateTime.Today.Year;
 
-    private bool IsEditing => editingBudgetId.HasValue;
+
+    private bool IsEditing =>
+        budgetForm.BudgetId > 0;
+
 
     private IEnumerable<int> AvailableYears =>
-        Enumerable.Range(DateTime.Today.Year - 2, 6);
+        Enumerable.Range(
+            DateTime.Today.Year - 2,
+            6);
+
 
     private string SelectedFilterMonthName =>
         GetMonthName(filterMonth);
+
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             var authenticationState =
-                await AuthenticationStateProvider.GetAuthenticationStateAsync();
+                await AuthenticationStateProvider
+                    .GetAuthenticationStateAsync();
 
             var user =
-                await UserManager.GetUserAsync(authenticationState.User);
+                await UserManager.GetUserAsync(
+                    authenticationState.User);
 
             if (user is null)
             {
@@ -358,7 +432,13 @@ Delete
             currentUserId = user.Id;
 
             await LoadExpenseCategoriesAsync();
-            ResetForm();
+
+            // Only initialize a blank form if this wasn't a posted form.
+            if (budgetForm.Month <= 0)
+            {
+                ResetForm();
+            }
+
             await LoadBudgetsAsync();
         }
         catch (Exception ex)
@@ -371,6 +451,7 @@ Delete
             isLoading = false;
         }
     }
+
 
     private async Task LoadExpenseCategoriesAsync()
     {
@@ -391,6 +472,7 @@ Delete
             .ToListAsync();
     }
 
+
     private async Task LoadBudgetsAsync()
     {
         if (string.IsNullOrWhiteSpace(currentUserId))
@@ -408,42 +490,64 @@ Delete
                 budget.UserId == currentUserId &&
                 budget.Month == filterMonth &&
                 budget.Year == filterYear)
-            .OrderBy(budget => budget.Category!.Name)
+            .OrderBy(budget =>
+                budget.Category!.Name)
             .ToListAsync();
 
+
+        // PostgreSQL timestamptz expects UTC DateTime values.
         var startDate =
-            new DateTime(filterYear, filterMonth, 1);
+            new DateTime(
+                filterYear,
+                filterMonth,
+                1,
+                0,
+                0,
+                0,
+                DateTimeKind.Utc);
 
         var endDate =
             startDate.AddMonths(1);
 
-        var spendingByCategory = await db.Transactions
-            .AsNoTracking()
-            .Where(transaction =>
-                transaction.UserId == currentUserId &&
-                transaction.Type == TransactionType.Expense &&
-                transaction.Date >= startDate &&
-                transaction.Date < endDate)
-            .GroupBy(transaction => transaction.CategoryId)
-            .Select(group => new
-            {
-                CategoryId = group.Key,
-                Spent = group.Sum(transaction => transaction.Amount)
-            })
-            .ToDictionaryAsync(
-                item => item.CategoryId,
-                item => item.Spent);
+
+        var spendingByCategory =
+            await db.Transactions
+                .AsNoTracking()
+                .Where(transaction =>
+                    transaction.UserId == currentUserId &&
+                    transaction.Type == TransactionType.Expense &&
+                    transaction.Date >= startDate &&
+                    transaction.Date < endDate)
+                .GroupBy(transaction =>
+                    transaction.CategoryId)
+                .Select(group => new
+                {
+                    CategoryId = group.Key,
+
+                    Spent = group.Sum(
+                        transaction =>
+                            transaction.Amount)
+                })
+                .ToDictionaryAsync(
+                    item => item.CategoryId,
+                    item => item.Spent);
+
 
         budgetRows = budgets
-            .Select(budget => new BudgetRow
-            {
-                Budget = budget,
-                Spent = spendingByCategory.GetValueOrDefault(
-                    budget.CategoryId,
-                    0)
-            })
+            .Select(budget =>
+                new BudgetRow
+                {
+                    Budget = budget,
+
+                    Spent =
+                        spendingByCategory
+                            .GetValueOrDefault(
+                                budget.CategoryId,
+                                0)
+                })
             .ToList();
     }
+
 
     private async Task SaveBudgetAsync()
     {
@@ -464,12 +568,18 @@ Delete
             await using var db =
                 await DbFactory.CreateDbContextAsync();
 
-            var category = await db.Categories
-                .AsNoTracking()
-                .FirstOrDefaultAsync(category =>
-                    category.Id == budgetForm.CategoryId &&
-                    category.UserId == currentUserId &&
-                    category.Type == TransactionType.Expense);
+
+            var category =
+                await db.Categories
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(category =>
+                        category.Id ==
+                            budgetForm.CategoryId &&
+                        category.UserId ==
+                            currentUserId &&
+                        category.Type ==
+                            TransactionType.Expense);
+
 
             if (category is null)
             {
@@ -479,14 +589,22 @@ Delete
                 return;
             }
 
-            var duplicateBudget = await db.Budgets
-                .AsNoTracking()
-                .AnyAsync(budget =>
-                    budget.UserId == currentUserId &&
-                    budget.CategoryId == budgetForm.CategoryId &&
-                    budget.Month == budgetForm.Month &&
-                    budget.Year == budgetForm.Year &&
-                    budget.Id != editingBudgetId);
+
+            var duplicateBudget =
+                await db.Budgets
+                    .AsNoTracking()
+                    .AnyAsync(budget =>
+                        budget.UserId ==
+                            currentUserId &&
+                        budget.CategoryId ==
+                            budgetForm.CategoryId &&
+                        budget.Month ==
+                            budgetForm.Month &&
+                        budget.Year ==
+                            budgetForm.Year &&
+                        budget.Id !=
+                            budgetForm.BudgetId);
+
 
             if (duplicateBudget)
             {
@@ -496,12 +614,17 @@ Delete
                 return;
             }
 
-            if (IsEditing)
+
+            if (budgetForm.BudgetId > 0)
             {
-                var budget = await db.Budgets
-                    .FirstOrDefaultAsync(budget =>
-                        budget.Id == editingBudgetId &&
-                        budget.UserId == currentUserId);
+                var budget =
+                    await db.Budgets
+                        .FirstOrDefaultAsync(budget =>
+                            budget.Id ==
+                                budgetForm.BudgetId &&
+                            budget.UserId ==
+                                currentUserId);
+
 
                 if (budget is null)
                 {
@@ -511,10 +634,19 @@ Delete
                     return;
                 }
 
-                budget.Amount = budgetForm.Amount;
-                budget.Month = budgetForm.Month;
-                budget.Year = budgetForm.Year;
-                budget.CategoryId = budgetForm.CategoryId;
+
+                budget.Amount =
+                    budgetForm.Amount;
+
+                budget.Month =
+                    budgetForm.Month;
+
+                budget.Year =
+                    budgetForm.Year;
+
+                budget.CategoryId =
+                    budgetForm.CategoryId;
+
 
                 successMessage =
                     "Budget updated successfully.";
@@ -523,25 +655,43 @@ Delete
             {
                 var budget = new Budget
                 {
-                    Amount = budgetForm.Amount,
-                    Month = budgetForm.Month,
-                    Year = budgetForm.Year,
-                    CategoryId = budgetForm.CategoryId,
-                    UserId = currentUserId
+                    Amount =
+                        budgetForm.Amount,
+
+                    Month =
+                        budgetForm.Month,
+
+                    Year =
+                        budgetForm.Year,
+
+                    CategoryId =
+                        budgetForm.CategoryId,
+
+                    UserId =
+                        currentUserId
                 };
 
+
                 db.Budgets.Add(budget);
+
 
                 successMessage =
                     "Budget added successfully.";
             }
 
+
             await db.SaveChangesAsync();
 
-            filterMonth = budgetForm.Month;
-            filterYear = budgetForm.Year;
+
+            filterMonth =
+                budgetForm.Month;
+
+            filterYear =
+                budgetForm.Year;
+
 
             ResetForm();
+
             await LoadBudgetsAsync();
         }
         catch (DbUpdateException ex)
@@ -561,28 +711,42 @@ Delete
         }
     }
 
+
     private void StartEdit(Budget budget)
     {
         ClearMessages();
 
-        editingBudgetId = budget.Id;
+        budgetForm =
+            new BudgetFormModel
+            {
+                BudgetId =
+                    budget.Id,
 
-        budgetForm = new BudgetFormModel
-        {
-            Amount = budget.Amount,
-            Month = budget.Month,
-            Year = budget.Year,
-            CategoryId = budget.CategoryId
-        };
+                Amount =
+                    budget.Amount,
+
+                Month =
+                    budget.Month,
+
+                Year =
+                    budget.Year,
+
+                CategoryId =
+                    budget.CategoryId
+            };
     }
+
 
     private void CancelEdit()
     {
         ClearMessages();
+
         ResetForm();
     }
 
-    private async Task DeleteBudgetAsync(int budgetId)
+
+    private async Task DeleteBudgetAsync(
+        int budgetId)
     {
         ClearMessages();
 
@@ -594,17 +758,24 @@ Delete
             return;
         }
 
+
         isDeleting = true;
+
 
         try
         {
             await using var db =
                 await DbFactory.CreateDbContextAsync();
 
-            var budget = await db.Budgets
-                .FirstOrDefaultAsync(budget =>
-                    budget.Id == budgetId &&
-                    budget.UserId == currentUserId);
+
+            var budget =
+                await db.Budgets
+                    .FirstOrDefaultAsync(budget =>
+                        budget.Id ==
+                            budgetId &&
+                        budget.UserId ==
+                            currentUserId);
+
 
             if (budget is null)
             {
@@ -614,18 +785,30 @@ Delete
                 return;
             }
 
+
             db.Budgets.Remove(budget);
+
             await db.SaveChangesAsync();
 
-            if (editingBudgetId == budgetId)
+
+            if (budgetForm.BudgetId ==
+                budgetId)
             {
                 ResetForm();
             }
 
+
             successMessage =
                 "Budget deleted successfully.";
 
+
             await LoadBudgetsAsync();
+        }
+        catch (DbUpdateException ex)
+        {
+            errorMessage =
+                $"Unable to delete budget: " +
+                $"{ex.InnerException?.Message ?? ex.Message}";
         }
         catch (Exception ex)
         {
@@ -638,24 +821,49 @@ Delete
         }
     }
 
+
     private void ResetForm()
     {
-        editingBudgetId = null;
+        budgetForm =
+            new BudgetFormModel
+            {
+                BudgetId = 0,
 
-        budgetForm = new BudgetFormModel
-        {
-            Month = DateTime.Today.Month,
-            Year = DateTime.Today.Year,
-            CategoryId = expenseCategories.FirstOrDefault()?.Id ?? 0
-        };
+                Month =
+                    DateTime.Today.Month,
+
+                Year =
+                    DateTime.Today.Year,
+
+                CategoryId =
+                    expenseCategories
+                        .FirstOrDefault()?.Id ?? 0
+            };
     }
 
-    private static string GetMonthName(int month)
+
+    private static string GetMonthName(
+        int month)
     {
-        return CultureInfo.CurrentCulture
+        return CultureInfo
+            .CurrentCulture
             .DateTimeFormat
             .GetMonthName(month);
     }
+
+
+    private static string GetProgressStyle(
+        decimal percentage)
+    {
+        var width =
+            Math.Clamp(
+                percentage,
+                0,
+                100);
+
+        return $"width: {width:0.##}%;";
+    }
+
 
     private void ClearMessages()
     {
@@ -663,52 +871,87 @@ Delete
         successMessage = null;
     }
 
+
     private sealed class BudgetFormModel
     {
+        public int BudgetId { get; set; }
+
+
         [Range(
             typeof(decimal),
             "0.01",
             "999999999.99",
-            ErrorMessage = "Enter a budget amount greater than zero.")]
+            ErrorMessage =
+                "Enter a budget amount greater than zero.")]
+
         public decimal Amount { get; set; }
+
 
         [Range(
             1,
             12,
-            ErrorMessage = "Select a valid month.")]
-        public int Month { get; set; } = DateTime.Today.Month;
+            ErrorMessage =
+                "Select a valid month.")]
+
+        public int Month { get; set; } =
+            DateTime.Today.Month;
+
 
         [Range(
             2000,
             2100,
-            ErrorMessage = "Select a valid year.")]
-        public int Year { get; set; } = DateTime.Today.Year;
+            ErrorMessage =
+                "Select a valid year.")]
+
+        public int Year { get; set; } =
+            DateTime.Today.Year;
+
 
         [Range(
             1,
             int.MaxValue,
-            ErrorMessage = "Select an expense category.")]
+            ErrorMessage =
+                "Select an expense category.")]
+
         public int CategoryId { get; set; }
     }
 
+
     private sealed class BudgetRow
     {
-        public required Budget Budget { get; init; }
+        public required Budget Budget
+        {
+            get;
+            init;
+        }
 
-        public decimal Spent { get; init; }
+
+        public decimal Spent
+        {
+            get;
+            init;
+        }
+
 
         public decimal Remaining =>
             Budget.Amount - Spent;
 
+
         public bool IsOverBudget =>
             Spent > Budget.Amount;
+
 
         public decimal PercentageUsed =>
             Budget.Amount <= 0
                 ? 0
-                : Spent / Budget.Amount * 100;
+                : Spent /
+                  Budget.Amount *
+                  100;
+
 
         public decimal ProgressWidth =>
-            Math.Min(PercentageUsed, 100);
+            Math.Min(
+                PercentageUsed,
+                100);
     }
 }

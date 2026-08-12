@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("cse325-budgetwise")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c66dd8adfbebf4bf3cec25757978010ff3f20d51")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+543bb3056e6b2b007a77278d69f28ab81667dd9f")]
 [assembly: System.Reflection.AssemblyProductAttribute("cse325-budgetwise")]
 [assembly: System.Reflection.AssemblyTitleAttribute("cse325-budgetwise")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

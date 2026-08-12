@@ -4,6 +4,7 @@
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
@@ -17,12 +18,15 @@
 <PageTitle>Transactions</PageTitle>
 
 <div class="container py-4">
+
     <div class="mb-4">
         <h1>Transactions</h1>
+
         <p class="text-muted">
             Record and manage your income and expenses.
         </p>
     </div>
+
 
     @if (!string.IsNullOrWhiteSpace(errorMessage))
     {
@@ -31,6 +35,7 @@
         </div>
     }
 
+
     @if (!string.IsNullOrWhiteSpace(successMessage))
     {
         <div class="alert alert-success" role="alert">
@@ -38,37 +43,52 @@
         </div>
     }
 
+
     @if (isLoading)
     {
         <p>Loading transactions...</p>
     }
     else
     {
+        <!-- ADD / EDIT TRANSACTION -->
         <div class="card shadow-sm mb-4">
+
             <div class="card-body">
+
                 <h2 class="h5 mb-3">
-                    @(IsEditing ? "Edit Transaction" : "Add Transaction")
+                    @(IsEditing
+                        ? "Edit Transaction"
+                        : "Add Transaction")
                 </h2>
+
 
                 @if (categories.Count == 0)
                 {
                     <div class="alert alert-warning mb-0">
-                        You need to create at least one category before adding
-                        a transaction.
+
+                        You need to create at least one category
+                        before adding a transaction.
 
                         <a href="/categories" class="alert-link">
                             Create a category
                         </a>
+
                     </div>
                 }
                 else
                 {
-                    <EditForm Model="transactionForm" OnValidSubmit="SaveTransactionAsync">
+                    <EditForm Model="transactionForm" OnValidSubmit="SaveTransactionAsync" FormName="TransactionForm">
+
                         <DataAnnotationsValidator />
+
                         <ValidationSummary class="text-danger mb-3" />
 
+
                         <div class="row g-3">
+
+                            <!-- DESCRIPTION -->
                             <div class="col-md-6">
+
                                 <label for="description" class="form-label">
                                     Description
                                 </label>
@@ -77,9 +97,13 @@
                                            placeholder="Example: Grocery store" />
 
                                 <ValidationMessage For="() => transactionForm.Description" class="text-danger" />
+
                             </div>
 
+
+                            <!-- AMOUNT -->
                             <div class="col-md-3">
+
                                 <label for="amount" class="form-label">
                                     Amount
                                 </label>
@@ -88,9 +112,13 @@
                                              min="0.01" />
 
                                 <ValidationMessage For="() => transactionForm.Amount" class="text-danger" />
+
                             </div>
 
+
+                            <!-- DATE -->
                             <div class="col-md-3">
+
                                 <label for="date" class="form-label">
                                     Date
                                 </label>
@@ -98,15 +126,20 @@
                                 <InputDate id="date" class="form-control" @bind-Value="transactionForm.Date" />
 
                                 <ValidationMessage For="() => transactionForm.Date" class="text-danger" />
+
                             </div>
 
+
+                            <!-- TYPE -->
                             <div class="col-md-4">
+
                                 <label for="transactionType" class="form-label">
                                     Type
                                 </label>
 
                                 <InputSelect id="transactionType" class="form-select" @bind-Value="transactionForm.Type"
                                              @bind-Value:after="OnTypeChanged">
+
                                     <option value="@TransactionType.Expense">
                                         Expense
                                     </option>
@@ -114,17 +147,21 @@
                                     <option value="@TransactionType.Income">
                                         Income
                                     </option>
+
                                 </InputSelect>
 
-                                <ValidationMessage For="() => transactionForm.Type" class="text-danger" />
                             </div>
 
+
+                            <!-- CATEGORY -->
                             <div class="col-md-5">
+
                                 <label for="category" class="form-label">
                                     Category
                                 </label>
 
                                 <InputSelect id="category" class="form-select" @bind-Value="transactionForm.CategoryId">
+
                                     <option value="0">
                                         Select a category
                                     </option>
@@ -135,72 +172,102 @@
                                             @category.Name
                                         </option>
                                     }
+
                                 </InputSelect>
 
                                 <ValidationMessage For="() => transactionForm.CategoryId" class="text-danger" />
 
+
                                 @if (FilteredCategories.Count == 0)
                                 {
                                     <div class="form-text text-warning">
+
                                         You do not have any
                                         @transactionForm.Type.ToString().ToLower()
                                         categories.
+
                                     </div>
                                 }
+
                             </div>
 
+
+                            <!-- BUTTONS -->
                             <div class="col-md-3 d-flex align-items-end gap-2">
+
                                 <button type="submit" class="btn btn-primary flex-grow-1" disabled="@isSaving">
+
                                     @if (isSaving)
                                     {
-                                        <span>
-                                            @(IsEditing ? "Saving..." : "Adding...")
-                                        </span>
+                                        @(IsEditing
+                                            ? "Saving..."
+                                            : "Adding...")
                                     }
                                     else
                                     {
-                                        <span>
-                                            @(IsEditing
-                                                ? "Save Changes"
-                                                : "Add Transaction")
-                                        </span>
+                                        @(IsEditing
+                                            ? "Save Changes"
+                                            : "Add Transaction")
                                     }
+
                                 </button>
+
 
                                 @if (IsEditing)
                                 {
                                     <button type="button" class="btn btn-outline-secondary" disabled="@isSaving"
                                             @onclick="CancelEdit">
+
                                         Cancel
+
                                     </button>
                                 }
+
                             </div>
+
                         </div>
+
                     </EditForm>
                 }
+
             </div>
+
         </div>
 
+
+        <!-- TRANSACTION LIST -->
         <div class="card shadow-sm">
+
             <div class="card-body">
-                <div class="d-flex flex-wrap justify-content-between
-                    align-items-center gap-3 mb-3">
-                    <h2 class="h5 mb-0">Your Transactions</h2>
+
+                <div class="d-flex flex-wrap
+                    justify-content-between
+                    align-items-center
+                    gap-3 mb-3">
+
+                    <h2 class="h5 mb-0">
+                        Your Transactions
+                    </h2>
+
 
                     <div class="d-flex flex-wrap gap-2">
+
                         <span class="badge text-bg-success fs-6">
-                            Income: @TotalIncome.ToString("C")
+                            Income: @(TotalIncome.ToString("C"))
                         </span>
 
                         <span class="badge text-bg-danger fs-6">
-                            Expenses: @TotalExpenses.ToString("C")
+                            Expenses: @(TotalExpenses.ToString("C"))
                         </span>
 
                         <span class="badge text-bg-primary fs-6">
-                            Balance: @CurrentBalance.ToString("C")
+                            Balance: @(CurrentBalance.ToString("C"))
                         </span>
+
                     </div>
+
                 </div>
+
 
                 @if (transactions.Count == 0)
                 {
@@ -211,38 +278,56 @@
                 else
                 {
                     <div class="table-responsive">
+
                         <table class="table table-hover align-middle mb-0">
+
                             <thead>
                                 <tr>
                                     <th>Date</th>
                                     <th>Description</th>
                                     <th>Category</th>
                                     <th>Type</th>
-                                    <th class="text-end">Amount</th>
-                                    <th class="text-end">Actions</th>
+                                    <th class="text-end">
+                                        Amount
+                                    </th>
+                                    <th class="text-end">
+                                        Actions
+                                    </th>
                                 </tr>
                             </thead>
 
+
                             <tbody>
+
                                 @foreach (var transaction in transactions)
                                 {
-                                    <tr class="@(editingTransactionId == transaction.Id
-                                                                                            ? "table-primary"
-                                                                                            : null)">
+                                    <tr class="@(transactionForm.TransactionId == transaction.Id
+                                                                                ? "table-primary"
+                                                                                : null)">
+
+                                        <!-- DATE -->
                                         <td>
-                                            @transaction.Date.ToString("MMM d, yyyy")
+                                            @(transaction.Date.ToString("MMM d, yyyy"))
                                         </td>
 
-                                        <td>@transaction.Description</td>
 
+                                        <!-- DESCRIPTION -->
+                                        <td>
+                                            @transaction.Description
+                                        </td>
+
+
+                                        <!-- CATEGORY -->
                                         <td>
                                             @(transaction.Category?.Name
                                                 ?? "No category")
                                         </td>
 
+
+                                        <!-- TYPE -->
                                         <td>
-                                            @if (transaction.Type ==
-                                                 TransactionType.Income)
+
+                                            @if (transaction.Type == TransactionType.Income)
                                             {
                                                 <span class="badge text-bg-success">
                                                     Income
@@ -254,97 +339,151 @@
                                                     Expense
                                                 </span>
                                             }
+
                                         </td>
 
+
+                                        <!-- AMOUNT -->
                                         <td class="text-end fw-semibold">
-                                            @if (transaction.Type ==
-                                                 TransactionType.Income)
+
+                                            @if (transaction.Type == TransactionType.Income)
                                             {
                                                 <span class="text-success">
-                                                    +@transaction.Amount.ToString("C")
+                                                    +@(transaction.Amount.ToString("C"))
                                                 </span>
                                             }
                                             else
                                             {
                                                 <span class="text-danger">
-                                                    -@transaction.Amount.ToString("C")
+                                                    -@(transaction.Amount.ToString("C"))
                                                 </span>
                                             }
+
                                         </td>
 
+
+                                        <!-- ACTIONS -->
                                         <td class="text-end">
+
                                             <div class="d-inline-flex gap-2">
+
                                                 <button type="button" class="btn btn-sm btn-outline-primary"
                                                         disabled="@(isSaving || isDeleting)" @onclick="() => StartEdit(transaction)">
+
                                                     Edit
+
                                                 </button>
 
+
                                                 <button type="button" class="btn btn-sm btn-outline-danger"
-                                                        disabled="@(isSaving || isDeleting)" @onclick="() =>
-                                                                                                                    DeleteTransactionAsync(
-                                                                                                                        transaction.Id)">
-Delete
-</button>
+                                                        disabled="@(isSaving || isDeleting)"
+                                                        @onclick="() => DeleteTransactionAsync(transaction.Id)">
+
+                                                    Delete
+
+                                                </button>
+
                                             </div>
+
                                         </td>
+
                                     </tr>
                                 }
+
                             </tbody>
+
                         </table>
+
                     </div>
                 }
+
             </div>
+
         </div>
     }
+
 </div>
 
+
 @code {
-    private TransactionFormModel transactionForm = new();
+
+    // FORM
+
+    [SupplyParameterFromForm(FormName = "TransactionForm")]
+    private TransactionFormModel transactionForm { get; set; } = new();
+
+
+    // DATA
 
     private List<Category> categories = [];
+
     private List<Transaction> transactions = [];
 
-    private int? editingTransactionId;
+
     private string? currentUserId;
+
     private string? errorMessage;
+
     private string? successMessage;
 
+
     private bool isLoading = true;
+
     private bool isSaving;
+
     private bool isDeleting;
 
-    private bool IsEditing => editingTransactionId.HasValue;
+
+    // STATE
+
+    private bool IsEditing =>
+        transactionForm.TransactionId > 0;
+
 
     private List<Category> FilteredCategories =>
         categories
-            .Where(category => category.Type == transactionForm.Type)
-            .OrderBy(category => category.Name)
+            .Where(category =>
+                category.Type == transactionForm.Type)
+            .OrderBy(category =>
+                category.Name)
             .ToList();
+
 
     private decimal TotalIncome =>
         transactions
             .Where(transaction =>
                 transaction.Type == TransactionType.Income)
-            .Sum(transaction => transaction.Amount);
+            .Sum(transaction =>
+                transaction.Amount);
+
 
     private decimal TotalExpenses =>
         transactions
             .Where(transaction =>
                 transaction.Type == TransactionType.Expense)
-            .Sum(transaction => transaction.Amount);
+            .Sum(transaction =>
+                transaction.Amount);
+
 
     private decimal CurrentBalance =>
         TotalIncome - TotalExpenses;
+
+
+    // LOAD PAGE
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             var authenticationState =
-                await AuthenticationStateProvider.GetAuthenticationStateAsync();
+                await AuthenticationStateProvider
+                    .GetAuthenticationStateAsync();
+
 
             var user =
-                await UserManager.GetUserAsync(authenticationState.User);
+                await UserManager.GetUserAsync(
+                    authenticationState.User);
+
 
             if (user is null)
             {
@@ -354,10 +493,22 @@ Delete
                 return;
             }
 
-            currentUserId = user.Id;
+
+            currentUserId =
+                user.Id;
+
 
             await LoadCategoriesAsync();
-            ResetForm();
+
+
+            // If this wasn't populated from a submitted form,
+            // initialize a new transaction.
+            if (transactionForm.Date == default)
+            {
+                ResetForm();
+            }
+
+
             await LoadTransactionsAsync();
         }
         catch (Exception ex)
@@ -371,6 +522,9 @@ Delete
         }
     }
 
+
+    // LOAD CATEGORIES
+
     private async Task LoadCategoriesAsync()
     {
         if (string.IsNullOrWhiteSpace(currentUserId))
@@ -378,15 +532,23 @@ Delete
             return;
         }
 
+
         await using var db =
             await DbFactory.CreateDbContextAsync();
 
-        categories = await db.Categories
-            .AsNoTracking()
-            .Where(category => category.UserId == currentUserId)
-            .OrderBy(category => category.Name)
-            .ToListAsync();
+
+        categories =
+            await db.Categories
+                .AsNoTracking()
+                .Where(category =>
+                    category.UserId == currentUserId)
+                .OrderBy(category =>
+                    category.Name)
+                .ToListAsync();
     }
+
+
+    // LOAD TRANSACTIONS
 
     private async Task LoadTransactionsAsync()
     {
@@ -395,72 +557,116 @@ Delete
             return;
         }
 
+
         await using var db =
             await DbFactory.CreateDbContextAsync();
 
-        transactions = await db.Transactions
-            .AsNoTracking()
-            .Include(transaction => transaction.Category)
-            .Where(transaction => transaction.UserId == currentUserId)
-            .OrderByDescending(transaction => transaction.Date)
-            .ThenByDescending(transaction => transaction.Id)
-            .ToListAsync();
+
+        transactions =
+            await db.Transactions
+                .AsNoTracking()
+                .Include(transaction =>
+                    transaction.Category)
+                .Where(transaction =>
+                    transaction.UserId == currentUserId)
+                .OrderByDescending(transaction =>
+                    transaction.Date)
+                .ThenByDescending(transaction =>
+                    transaction.Id)
+                .ToListAsync();
     }
+
+
+    // TYPE CHANGE
 
     private void OnTypeChanged()
     {
         transactionForm.CategoryId = 0;
+
         SetDefaultCategory();
     }
 
+
     private void SetDefaultCategory()
     {
-        var firstCategory = FilteredCategories.FirstOrDefault();
+        var firstCategory =
+            FilteredCategories.FirstOrDefault();
+
 
         transactionForm.CategoryId =
             firstCategory?.Id ?? 0;
     }
 
-    private void StartEdit(Transaction transaction)
+
+    // START EDIT
+
+    private void StartEdit(
+        Transaction transaction)
     {
         ClearMessages();
 
-        editingTransactionId = transaction.Id;
 
-        transactionForm = new TransactionFormModel
-        {
-            Description = transaction.Description,
-            Amount = transaction.Amount,
-            Date = transaction.Date,
-            Type = transaction.Type,
-            CategoryId = transaction.CategoryId
-        };
+        transactionForm =
+            new TransactionFormModel
+            {
+                TransactionId =
+                    transaction.Id,
 
-        successMessage = null;
+                Description =
+                    transaction.Description,
+
+                Amount =
+                    transaction.Amount,
+
+                Date =
+                    transaction.Date.Date,
+
+                Type =
+                    transaction.Type,
+
+                CategoryId =
+                    transaction.CategoryId
+            };
     }
+
+
+    // CANCEL EDIT
 
     private void CancelEdit()
     {
         ClearMessages();
+
         ResetForm();
     }
 
+
+    // RESET FORM
+
     private void ResetForm()
     {
-        editingTransactionId = null;
+        transactionForm =
+            new TransactionFormModel
+            {
+                TransactionId = 0,
 
-        transactionForm = new TransactionFormModel
-        {
-            Date = DateTime.Today,
-            Type = TransactionType.Expense
-        };
+                Date =
+                    DateTime.Today,
+
+                Type =
+                    TransactionType.Expense
+            };
+
 
         SetDefaultCategory();
     }
 
+
+    // SAVE TRANSACTION
+
     private async Task SaveTransactionAsync()
     {
         ClearMessages();
+
 
         if (string.IsNullOrWhiteSpace(currentUserId))
         {
@@ -470,13 +676,20 @@ Delete
             return;
         }
 
-        var description = transactionForm.Description.Trim();
+
+        var description =
+            transactionForm.Description?.Trim()
+            ?? string.Empty;
+
 
         if (string.IsNullOrWhiteSpace(description))
         {
-            errorMessage = "Enter a transaction description.";
+            errorMessage =
+                "Enter a transaction description.";
+
             return;
         }
+
 
         if (transactionForm.Amount <= 0)
         {
@@ -486,24 +699,34 @@ Delete
             return;
         }
 
+
         isSaving = true;
+
 
         try
         {
             await using var db =
                 await DbFactory.CreateDbContextAsync();
 
-            var category = await db.Categories
-                .AsNoTracking()
-                .FirstOrDefaultAsync(category =>
-                    category.Id == transactionForm.CategoryId &&
-                    category.UserId == currentUserId);
+
+            var category =
+                await db.Categories
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(category =>
+                        category.Id ==
+                            transactionForm.CategoryId &&
+                        category.UserId ==
+                            currentUserId);
+
 
             if (category is null)
             {
-                errorMessage = "Select a valid category.";
+                errorMessage =
+                    "Select a valid category.";
+
                 return;
             }
+
 
             if (category.Type != transactionForm.Type)
             {
@@ -512,6 +735,7 @@ Delete
 
                 return;
             }
+
 
             if (IsEditing)
             {
@@ -531,7 +755,8 @@ Delete
         catch (DbUpdateException ex)
         {
             errorMessage =
-                $"The transaction could not be saved: {ex.InnerException?.Message ?? ex.Message}";
+                $"The transaction could not be saved: " +
+                $"{ex.InnerException?.Message ?? ex.Message}";
         }
         catch (Exception ex)
         {
@@ -544,6 +769,9 @@ Delete
         }
     }
 
+
+    // ADD TRANSACTION
+
     private async Task AddTransactionAsync(
         ApplicationDbContext db,
         string description,
@@ -554,41 +782,83 @@ Delete
             return;
         }
 
-        var transaction = new Transaction
-        {
-            Description = description,
-            Amount = transactionForm.Amount,
-            Date = transactionForm.Date.Date,
-            Type = transactionForm.Type,
-            CategoryId = categoryId,
-            UserId = currentUserId
-        };
+
+        var transactionDate =
+            DateTime.SpecifyKind(
+                transactionForm.Date.Date,
+                DateTimeKind.Utc);
+
+
+        var transaction =
+            new Transaction
+            {
+                Description =
+                    description,
+
+                Amount =
+                    transactionForm.Amount,
+
+                Date =
+                    transactionDate,
+
+                Type =
+                    transactionForm.Type,
+
+                CategoryId =
+                    categoryId,
+
+                UserId =
+                    currentUserId
+            };
+
 
         db.Transactions.Add(transaction);
+
+
         await db.SaveChangesAsync();
+
 
         successMessage =
             "Transaction added successfully.";
 
+
         await LoadTransactionsAsync();
+
+
         ResetForm();
     }
+
+
+    // UPDATE TRANSACTION
 
     private async Task UpdateTransactionAsync(
         ApplicationDbContext db,
         string description,
         int categoryId)
     {
-        if (string.IsNullOrWhiteSpace(currentUserId) ||
-            !editingTransactionId.HasValue)
+        if (string.IsNullOrWhiteSpace(currentUserId))
         {
             return;
         }
 
+
+        if (transactionForm.TransactionId <= 0)
+        {
+            errorMessage =
+                "The transaction could not be found.";
+
+            return;
+        }
+
+
         var transaction =
-            await db.Transactions.FirstOrDefaultAsync(transaction =>
-                transaction.Id == editingTransactionId.Value &&
-                transaction.UserId == currentUserId);
+            await db.Transactions
+                .FirstOrDefaultAsync(transaction =>
+                    transaction.Id ==
+                        transactionForm.TransactionId &&
+                    transaction.UserId ==
+                        currentUserId);
+
 
         if (transaction is null)
         {
@@ -598,24 +868,50 @@ Delete
             return;
         }
 
-        transaction.Description = description;
-        transaction.Amount = transactionForm.Amount;
-        transaction.Date = transactionForm.Date.Date;
-        transaction.Type = transactionForm.Type;
-        transaction.CategoryId = categoryId;
+
+        var transactionDate =
+            DateTime.SpecifyKind(
+                transactionForm.Date.Date,
+                DateTimeKind.Utc);
+
+
+        transaction.Description =
+            description;
+
+        transaction.Amount =
+            transactionForm.Amount;
+
+        transaction.Date =
+            transactionDate;
+
+        transaction.Type =
+            transactionForm.Type;
+
+        transaction.CategoryId =
+            categoryId;
+
 
         await db.SaveChangesAsync();
+
 
         successMessage =
             "Transaction updated successfully.";
 
+
         await LoadTransactionsAsync();
+
+
         ResetForm();
     }
 
-    private async Task DeleteTransactionAsync(int transactionId)
+
+    // DELETE TRANSACTION
+
+    private async Task DeleteTransactionAsync(
+        int transactionId)
     {
         ClearMessages();
+
 
         if (string.IsNullOrWhiteSpace(currentUserId))
         {
@@ -625,17 +921,24 @@ Delete
             return;
         }
 
+
         isDeleting = true;
+
 
         try
         {
             await using var db =
                 await DbFactory.CreateDbContextAsync();
 
+
             var transaction =
-                await db.Transactions.FirstOrDefaultAsync(transaction =>
-                    transaction.Id == transactionId &&
-                    transaction.UserId == currentUserId);
+                await db.Transactions
+                    .FirstOrDefaultAsync(transaction =>
+                        transaction.Id ==
+                            transactionId &&
+                        transaction.UserId ==
+                            currentUserId);
+
 
             if (transaction is null)
             {
@@ -645,18 +948,31 @@ Delete
                 return;
             }
 
+
             db.Transactions.Remove(transaction);
+
+
             await db.SaveChangesAsync();
 
-            if (editingTransactionId == transactionId)
+
+            if (transactionForm.TransactionId ==
+                transactionId)
             {
                 ResetForm();
             }
 
+
             successMessage =
                 "Transaction deleted successfully.";
 
+
             await LoadTransactionsAsync();
+        }
+        catch (DbUpdateException ex)
+        {
+            errorMessage =
+                $"Unable to delete transaction: " +
+                $"{ex.InnerException?.Message ?? ex.Message}";
         }
         catch (Exception ex)
         {
@@ -669,40 +985,82 @@ Delete
         }
     }
 
+
+    // MESSAGES
+
     private void ClearMessages()
     {
         errorMessage = null;
+
         successMessage = null;
     }
 
+
+    // FORM MODEL
+
     private sealed class TransactionFormModel
     {
-        [Required(ErrorMessage = "Enter a description.")]
+        public int TransactionId { get; set; }
+
+
+        [Required(
+            ErrorMessage =
+                "Enter a description.")]
+
         [StringLength(
             100,
             MinimumLength = 2,
             ErrorMessage =
                 "The description must be between 2 and 100 characters.")]
-        public string Description { get; set; } = string.Empty;
+
+        public string Description
+        {
+            get;
+            set;
+        } = string.Empty;
+
 
         [Range(
             typeof(decimal),
             "0.01",
             "999999999.99",
-            ErrorMessage = "Enter an amount greater than zero.")]
-        public decimal Amount { get; set; }
+            ErrorMessage =
+                "Enter an amount greater than zero.")]
+
+        public decimal Amount
+        {
+            get;
+            set;
+        }
+
 
         [Required]
-        public DateTime Date { get; set; } = DateTime.Today;
+        public DateTime Date
+        {
+            get;
+            set;
+        }
+
 
         [Required]
-        public TransactionType Type { get; set; } =
+        public TransactionType Type
+        {
+            get;
+            set;
+        } =
             TransactionType.Expense;
+
 
         [Range(
             1,
             int.MaxValue,
-            ErrorMessage = "Select a category.")]
-        public int CategoryId { get; set; }
+            ErrorMessage =
+                "Select a category.")]
+
+        public int CategoryId
+        {
+            get;
+            set;
+        }
     }
 }
