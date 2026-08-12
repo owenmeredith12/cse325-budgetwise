@@ -4,6 +4,7 @@
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
@@ -49,6 +50,7 @@
                 <h2 class="h5 mb-3">Add Category</h2>
 
                 <EditForm Model="categoryForm" OnValidSubmit="AddCategoryAsync" FormName="AddCategoryForm">
+
                     <DataAnnotationsValidator />
                     <ValidationSummary class="text-danger mb-3" />
 
@@ -70,12 +72,15 @@
                             </label>
 
                             <InputSelect id="categoryType" class="form-select" @bind-Value="categoryForm.Type">
+
                                 <option value="@TransactionType.Expense">
                                     Expense
                                 </option>
+
                                 <option value="@TransactionType.Income">
                                     Income
                                 </option>
+
                             </InputSelect>
 
                             <ValidationMessage For="() => categoryForm.Type" class="text-danger" />
@@ -120,7 +125,8 @@
                                         <td>@category.Name</td>
 
                                         <td>
-                                            @if (category.Type == TransactionType.Income)
+                                            @if (category.Type ==
+                                                 TransactionType.Income)
                                             {
                                                 <span class="badge text-bg-success">
                                                     Income
@@ -152,7 +158,9 @@
 </div>
 
 @code {
-    private readonly CategoryFormModel categoryForm = new();
+    [SupplyParameterFromForm(FormName = "AddCategoryForm")]
+    private CategoryFormModel categoryForm { get; set; } = new();
+
     private List<Category> categories = [];
 
     private string? currentUserId;
@@ -168,13 +176,18 @@
         try
         {
             var authenticationState =
-                await AuthenticationStateProvider.GetAuthenticationStateAsync();
+                await AuthenticationStateProvider
+                    .GetAuthenticationStateAsync();
 
-            var user = await UserManager.GetUserAsync(authenticationState.User);
+            var user =
+                await UserManager.GetUserAsync(
+                    authenticationState.User);
 
             if (user is null)
             {
-                errorMessage = "You must be signed in to manage categories.";
+                errorMessage =
+                    "You must be signed in to manage categories.";
+
                 return;
             }
 
@@ -184,7 +197,8 @@
         }
         catch (Exception ex)
         {
-            errorMessage = $"Unable to load categories: {ex.Message}";
+            errorMessage =
+                $"Unable to load categories: {ex.Message}";
         }
         finally
         {
@@ -199,11 +213,13 @@
             return;
         }
 
-        await using var db = await DbFactory.CreateDbContextAsync();
+        await using var db =
+            await DbFactory.CreateDbContextAsync();
 
         categories = await db.Categories
             .AsNoTracking()
-            .Where(category => category.UserId == currentUserId)
+            .Where(category =>
+                category.UserId == currentUserId)
             .OrderBy(category => category.Type)
             .ThenBy(category => category.Name)
             .ToListAsync();
@@ -215,15 +231,20 @@
 
         if (string.IsNullOrWhiteSpace(currentUserId))
         {
-            errorMessage = "You must be signed in to add a category.";
+            errorMessage =
+                "You must be signed in to add a category.";
+
             return;
         }
 
-        var categoryName = categoryForm.Name.Trim();
+        var categoryName =
+            categoryForm.Name?.Trim() ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(categoryName))
         {
-            errorMessage = "Enter a category name.";
+            errorMessage =
+                "Enter a category name.";
+
             return;
         }
 
@@ -231,14 +252,17 @@
 
         try
         {
-            await using var db = await DbFactory.CreateDbContextAsync();
+            await using var db =
+                await DbFactory.CreateDbContextAsync();
 
-            var normalizedName = categoryName.ToLower();
+            var normalizedName =
+                categoryName.ToLower();
 
-            var alreadyExists = await db.Categories.AnyAsync(category =>
-                category.UserId == currentUserId &&
-                category.Type == categoryForm.Type &&
-                category.Name.ToLower() == normalizedName);
+            var alreadyExists =
+                await db.Categories.AnyAsync(category =>
+                    category.UserId == currentUserId &&
+                    category.Type == categoryForm.Type &&
+                    category.Name.ToLower() == normalizedName);
 
             if (alreadyExists)
             {
@@ -256,18 +280,29 @@
             };
 
             db.Categories.Add(category);
+
             await db.SaveChangesAsync();
 
-            categoryForm.Name = string.Empty;
-            categoryForm.Type = TransactionType.Expense;
+            categoryForm = new CategoryFormModel
+            {
+                Type = TransactionType.Expense
+            };
 
-            successMessage = "Category added successfully.";
+            successMessage =
+                "Category added successfully.";
 
             await LoadCategoriesAsync();
         }
+        catch (DbUpdateException ex)
+        {
+            errorMessage =
+                $"Unable to save the category: " +
+                $"{ex.InnerException?.Message ?? ex.Message}";
+        }
         catch (Exception ex)
         {
-            errorMessage = $"Unable to add category: {ex.Message}";
+            errorMessage =
+                $"Unable to add category: {ex.Message}";
         }
         finally
         {
@@ -281,7 +316,9 @@
 
         if (string.IsNullOrWhiteSpace(currentUserId))
         {
-            errorMessage = "You must be signed in to delete a category.";
+            errorMessage =
+                "You must be signed in to delete a category.";
+
             return;
         }
 
@@ -289,33 +326,40 @@
 
         try
         {
-            await using var db = await DbFactory.CreateDbContextAsync();
+            await using var db =
+                await DbFactory.CreateDbContextAsync();
 
-            var category = await db.Categories.FirstOrDefaultAsync(category =>
-                category.Id == categoryId &&
-                category.UserId == currentUserId);
+            var category =
+                await db.Categories.FirstOrDefaultAsync(category =>
+                    category.Id == categoryId &&
+                    category.UserId == currentUserId);
 
             if (category is null)
             {
-                errorMessage = "The category could not be found.";
+                errorMessage =
+                    "The category could not be found.";
+
                 return;
             }
 
             db.Categories.Remove(category);
+
             await db.SaveChangesAsync();
 
-            successMessage = "Category deleted successfully.";
+            successMessage =
+                "Category deleted successfully.";
 
             await LoadCategoriesAsync();
         }
         catch (DbUpdateException)
         {
             errorMessage =
-                "This category cannot be deleted because it is being used by one or more transactions.";
+                "This category cannot be deleted because it is being used by one or more transactions or budgets.";
         }
         catch (Exception ex)
         {
-            errorMessage = $"Unable to delete category: {ex.Message}";
+            errorMessage =
+                $"Unable to delete category: {ex.Message}";
         }
         finally
         {
@@ -335,7 +379,8 @@
         [StringLength(
             50,
             MinimumLength = 2,
-            ErrorMessage = "The category name must be between 2 and 50 characters.")]
+            ErrorMessage =
+                "The category name must be between 2 and 50 characters.")]
         public string Name { get; set; } = string.Empty;
 
         [Required]
