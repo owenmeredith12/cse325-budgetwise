@@ -18,6 +18,7 @@
 <PageTitle>Categories</PageTitle>
 
 <div class="container py-4">
+
     <div class="mb-4">
         <h1>Categories</h1>
         <p class="text-muted">
@@ -45,8 +46,10 @@
     }
     else
     {
+        <!-- ADD CATEGORY -->
         <div class="card shadow-sm mb-4">
             <div class="card-body">
+
                 <h2 class="h5 mb-3">Add Category</h2>
 
                 <EditForm Model="categoryForm" OnValidSubmit="AddCategoryAsync" FormName="AddCategoryForm">
@@ -55,6 +58,7 @@
                     <ValidationSummary class="text-danger mb-3" />
 
                     <div class="row g-3">
+
                         <div class="col-md-7">
                             <label for="categoryName" class="form-label">
                                 Category name
@@ -80,6 +84,7 @@
                                 <option value="@TransactionType.Income">
                                     Income
                                 </option>
+
                             </InputSelect>
 
                             <ValidationMessage For="() => categoryForm.Type" class="text-danger" />
@@ -87,16 +92,23 @@
 
                         <div class="col-md-2 d-flex align-items-end">
                             <button type="submit" class="btn btn-primary w-100" disabled="@isSaving">
+
                                 @(isSaving ? "Adding..." : "Add")
+
                             </button>
                         </div>
+
                     </div>
+
                 </EditForm>
+
             </div>
         </div>
 
+        <!-- CATEGORY LIST -->
         <div class="card shadow-sm">
             <div class="card-body">
+
                 <h2 class="h5 mb-3">Your Categories</h2>
 
                 @if (categories.Count == 0)
@@ -107,65 +119,79 @@
                 }
                 else
                 {
-                    <EditForm Model="this" OnSubmit="DeleteCategoryAsync" FormName="DeleteCategoryForm">
+                    <div class="table-responsive">
 
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead>
+                        <table class="table table-hover align-middle mb-0">
+
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                @foreach (var category in categories)
+                                {
                                     <tr>
-                                        <th>Name</th>
-                                        <th>Type</th>
-                                        <th class="text-end">Actions</th>
+
+                                        <td>
+                                            @category.Name
+                                        </td>
+
+                                        <td>
+                                            @if (category.Type == TransactionType.Income)
+                                            {
+                                                <span class="badge text-bg-success">
+                                                    Income
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge text-bg-danger">
+                                                    Expense
+                                                </span>
+                                            }
+                                        </td>
+
+                                        <td class="text-end">
+
+                                            <button type="button" class="btn btn-sm btn-outline-danger" disabled="@isDeleting"
+                                                    @onclick="() => DeleteCategoryAsync(category.Id)">
+
+                                                Delete
+
+                                            </button>
+
+                                        </td>
+
                                     </tr>
-                                </thead>
+                                }
 
-                                <tbody>
-                                    @foreach (var category in categories)
-                                    {
-                                        <tr>
-                                            <td>@category.Name</td>
+                            </tbody>
 
-                                            <td>
-                                                @if (category.Type == TransactionType.Income)
-                                                {
-                                                    <span class="badge text-bg-success">
-                                                        Income
-                                                    </span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge text-bg-danger">
-                                                        Expense
-                                                    </span>
-                                                }
-                                            </td>
+                        </table>
 
-                                            <td class="text-end">
-                                                <button type="submit" name="CategoryId" value="@category.Id"
-                                                        class="btn btn-sm btn-outline-danger" disabled="@isDeleting">
-                                                    Delete
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    </EditForm>
+                    </div>
                 }
+
             </div>
         </div>
     }
+
 </div>
 
 @code {
+
+    // ADD CATEGORY FORM
+
     [SupplyParameterFromForm(FormName = "AddCategoryForm")]
     private CategoryFormModel categoryForm { get; set; } = new();
 
-    [SupplyParameterFromForm(
-        FormName = "DeleteCategoryForm",
-        Name = "CategoryId")]
-    private int categoryIdToDelete { get; set; }
+
+    // PAGE DATA
 
     private List<Category> categories = [];
 
@@ -176,6 +202,9 @@
     private bool isLoading = true;
     private bool isSaving;
     private bool isDeleting;
+
+
+    // PAGE LOAD
 
     protected override async Task OnInitializedAsync()
     {
@@ -212,6 +241,9 @@
         }
     }
 
+
+    // LOAD CATEGORIES
+
     private async Task LoadCategoriesAsync()
     {
         if (string.IsNullOrWhiteSpace(currentUserId))
@@ -230,6 +262,9 @@
             .ThenBy(category => category.Name)
             .ToListAsync();
     }
+
+
+    // ADD CATEGORY
 
     private async Task AddCategoryAsync()
     {
@@ -316,7 +351,10 @@
         }
     }
 
-    private async Task DeleteCategoryAsync()
+
+    // DELETE CATEGORY
+
+    private async Task DeleteCategoryAsync(int categoryId)
     {
         ClearMessages();
 
@@ -324,14 +362,6 @@
         {
             errorMessage =
                 "You must be signed in to delete a category.";
-
-            return;
-        }
-
-        if (categoryIdToDelete <= 0)
-        {
-            errorMessage =
-                "Invalid category selected.";
 
             return;
         }
@@ -344,9 +374,10 @@
                 await DbFactory.CreateDbContextAsync();
 
             var category =
-                await db.Categories.FirstOrDefaultAsync(category =>
-                    category.Id == categoryIdToDelete &&
-                    category.UserId == currentUserId);
+                await db.Categories
+                    .FirstOrDefaultAsync(category =>
+                        category.Id == categoryId &&
+                        category.UserId == currentUserId);
 
             if (category is null)
             {
@@ -356,17 +387,19 @@
                 return;
             }
 
-            var isUsedByTransaction =
-                await db.Transactions.AnyAsync(transaction =>
-                    transaction.CategoryId == category.Id &&
-                    transaction.UserId == currentUserId);
+            var usedByTransaction =
+                await db.Transactions
+                    .AnyAsync(transaction =>
+                        transaction.CategoryId == categoryId &&
+                        transaction.UserId == currentUserId);
 
-            var isUsedByBudget =
-                await db.Budgets.AnyAsync(budget =>
-                    budget.CategoryId == category.Id &&
-                    budget.UserId == currentUserId);
+            var usedByBudget =
+                await db.Budgets
+                    .AnyAsync(budget =>
+                        budget.CategoryId == categoryId &&
+                        budget.UserId == currentUserId);
 
-            if (isUsedByTransaction || isUsedByBudget)
+            if (usedByTransaction || usedByBudget)
             {
                 errorMessage =
                     "This category cannot be deleted because it is being used by a transaction or budget.";
@@ -377,8 +410,6 @@
             db.Categories.Remove(category);
 
             await db.SaveChangesAsync();
-
-            categoryIdToDelete = 0;
 
             successMessage =
                 "Category deleted successfully.";
@@ -401,11 +432,17 @@
         }
     }
 
+
+    // CLEAR MESSAGES
+
     private void ClearMessages()
     {
         errorMessage = null;
         successMessage = null;
     }
+
+
+    // ADD CATEGORY FORM MODEL
 
     private sealed class CategoryFormModel
     {
@@ -415,7 +452,9 @@
             MinimumLength = 2,
             ErrorMessage =
                 "The category name must be between 2 and 50 characters.")]
+
         public string Name { get; set; } = string.Empty;
+
 
         [Required]
         public TransactionType Type { get; set; } =
