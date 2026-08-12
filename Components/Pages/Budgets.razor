@@ -306,9 +306,10 @@
                                                         : "Over Budget")
                                                 </div>
 
-                                                <div class="fw-semibold @(row.Remaining >= 0
-                                                                                                         ? "text-success"
-                                                                                                         : "text-danger")">
+                                                <div
+                                                    class="fw-semibold @(row.Remaining >= 0
+                                                                                                                                                             ? "text-success"
+                                                                                                                                                             : "text-danger")">
 
                                                     @(Math.Abs(row.Remaining).ToString("C"))
 
@@ -321,12 +322,12 @@
                                         <div class="progress" style="height: 12px;">
 
                                             <div class="progress-bar @(row.IsOverBudget
-                                                                                                     ? "bg-danger"
-                                                                                                     : row.PercentageUsed >= 80
-                                                                                                         ? "bg-warning"
-                                                                                                         : "bg-success")" role="progressbar"
-                                                 style="@GetProgressStyle(row.ProgressWidth)" aria-valuenow="@row.ProgressWidth"
-                                                 aria-valuemin="0" aria-valuemax="100">
+                                                                                                                                                      ? "bg-danger"
+                                                                                                                                                      : row.PercentageUsed >= 80
+                                                                                                                                                          ? "bg-warning"
+                                                                                                                                                          : "bg-success")"
+                                                 role="progressbar" style="@GetProgressStyle(row.ProgressWidth)"
+                                                 aria-valuenow="@row.ProgressWidth" aria-valuemin="0" aria-valuemax="100">
                                             </div>
 
                                         </div>

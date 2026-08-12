@@ -1,5 +1,4 @@
-﻿```razor
-@page "/"
+﻿@page "/"
 @rendermode InteractiveServer
 @attribute [Authorize]
 
@@ -68,8 +67,8 @@
 
                     <div class="summary-value
                         @(CurrentBalance >= 0
-                            ? "text-success"
-                            : "text-danger")">
+                             ? "text-success"
+                             : "text-danger")">
                         @CurrentBalance.ToString("C")
                     </div>
 
@@ -128,8 +127,8 @@
 
                     <div class="summary-value
                         @(TotalBudgetRemaining >= 0
-                            ? "text-primary"
-                            : "text-danger")">
+                             ? "text-primary"
+                             : "text-danger")">
                         @TotalBudgetRemaining.ToString("C")
                     </div>
 
@@ -203,13 +202,11 @@
                                     </div>
 
                                     <div class="bar-area">
-                                        <div class="chart-bar income-bar"
-                                             title="Income: @report.Income.ToString("C")"
+                                        <div class="chart-bar income-bar" title="Income: @report.Income.ToString("C")"
                                              style="@GetBarHeightStyle(report.Income)">
                                         </div>
 
-                                        <div class="chart-bar expense-bar"
-                                             title="Expenses: @report.Expenses.ToString("C")"
+                                        <div class="chart-bar expense-bar" title="Expenses: @report.Expenses.ToString("C")"
                                              style="@GetBarHeightStyle(report.Expenses)">
                                         </div>
                                     </div>
@@ -257,8 +254,7 @@
                                     </div>
 
                                     <div class="category-track">
-                                        <div class="category-fill"
-                                             style="@GetWidthStyle(row.Percentage)">
+                                        <div class="category-fill" style="@GetWidthStyle(row.Percentage)">
                                         </div>
                                     </div>
 
@@ -285,8 +281,7 @@
                             <p>Your latest financial activity.</p>
                         </div>
 
-                        <a href="/transactions"
-                           class="btn btn-sm btn-outline-primary">
+                        <a href="/transactions" class="btn btn-sm btn-outline-primary">
                             View All
                         </a>
                     </div>
@@ -300,8 +295,7 @@
                                 You have not recorded any transactions yet.
                             </p>
 
-                            <a href="/transactions"
-                               class="btn btn-primary btn-sm">
+                            <a href="/transactions" class="btn btn-primary btn-sm">
                                 Add Transaction
                             </a>
                         </div>
@@ -330,9 +324,9 @@
 
                                                 <span class="badge
                                                     @(transaction.Type ==
-                                                        TransactionType.Income
-                                                        ? "text-bg-success"
-                                                        : "text-bg-danger")">
+                                                          TransactionType.Income
+                                                          ? "text-bg-success"
+                                                          : "text-bg-danger")">
                                                     @transaction.Type
                                                 </span>
                                             </td>
@@ -376,8 +370,7 @@
                             </p>
                         </div>
 
-                        <a href="/budgets"
-                           class="btn btn-sm btn-outline-primary">
+                        <a href="/budgets" class="btn btn-sm btn-outline-primary">
                             Manage
                         </a>
                     </div>
@@ -391,8 +384,7 @@
                                 You have not created any budgets for this month.
                             </p>
 
-                            <a href="/budgets"
-                               class="btn btn-primary btn-sm">
+                            <a href="/budgets" class="btn btn-primary btn-sm">
                                 Create Budget
                             </a>
                         </div>
@@ -416,8 +408,8 @@
 
                                         <span class="budget-status
                                             @(row.IsOverBudget
-                                                ? "text-danger"
-                                                : "text-success")">
+                                                  ? "text-danger"
+                                                  : "text-success")">
 
                                             @if (row.IsOverBudget)
                                             {
@@ -439,15 +431,12 @@
                                     <div class="progress budget-progress-bar">
                                         <div class="progress-bar
                                             @(row.IsOverBudget
-                                                ? "bg-danger"
-                                                : row.PercentageUsed >= 80
-                                                    ? "bg-warning"
-                                                    : "bg-success")"
-                                             role="progressbar"
-                                             style="@GetWidthStyle(row.ProgressWidth)"
-                                             aria-valuenow="@row.ProgressWidth"
-                                             aria-valuemin="0"
-                                             aria-valuemax="100">
+                                                 ? "bg-danger"
+                                                 : row.PercentageUsed >= 80
+                                                     ? "bg-warning"
+                                                     : "bg-success")" role="progressbar"
+                                             style="@GetWidthStyle(row.ProgressWidth)" aria-valuenow="@row.ProgressWidth"
+                                             aria-valuemin="0" aria-valuemax="100">
                                         </div>
                                     </div>
 
@@ -610,7 +599,7 @@
         text-align: center;
     }
 
-    .empty-state > .bi {
+    .empty-state>.bi {
         color: #94a3b8;
         font-size: 2rem;
     }
@@ -1160,4 +1149,4 @@
             Spent > BudgetAmount;
     }
 }
-```
+
