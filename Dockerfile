@@ -7,7 +7,8 @@ RUN dotnet restore
 
 COPY . .
 
-RUN dotnet publish -c Release -o /app/publish
+RUN dotnet clean -c Release
+RUN dotnet publish -c Release -o /app/publish --no-restore
 
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
@@ -16,9 +17,9 @@ WORKDIR /app
 
 COPY --from=build /app/publish .
 
-ENV ASPNETCORE_URLS=http://0.0.0.0:8080
+ENV ASPNETCORE_URLS=http://0.0.0.0:${PORT}
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-EXPOSE 8080
+EXPOSE 10000
 
 ENTRYPOINT ["dotnet", "cse325-budgetwise.dll"]
