@@ -49,39 +49,29 @@
             <div class="card-body">
                 <h2 class="h5 mb-3">Add Category</h2>
 
-                <EditForm Model="categoryForm"
-                          OnValidSubmit="AddCategoryAsync"
-                          FormName="AddCategoryForm">
+                <EditForm Model="categoryForm" OnValidSubmit="AddCategoryAsync" FormName="AddCategoryForm">
 
                     <DataAnnotationsValidator />
                     <ValidationSummary class="text-danger mb-3" />
 
                     <div class="row g-3">
                         <div class="col-md-7">
-                            <label for="categoryName"
-                                   class="form-label">
+                            <label for="categoryName" class="form-label">
                                 Category name
                             </label>
 
-                            <InputText id="categoryName"
-                                       class="form-control"
-                                       @bind-Value="categoryForm.Name"
+                            <InputText id="categoryName" class="form-control" @bind-Value="categoryForm.Name"
                                        placeholder="Example: Groceries" />
 
-                            <ValidationMessage
-                                For="() => categoryForm.Name"
-                                class="text-danger" />
+                            <ValidationMessage For="() => categoryForm.Name" class="text-danger" />
                         </div>
 
                         <div class="col-md-3">
-                            <label for="categoryType"
-                                   class="form-label">
+                            <label for="categoryType" class="form-label">
                                 Type
                             </label>
 
-                            <InputSelect id="categoryType"
-                                         class="form-select"
-                                         @bind-Value="categoryForm.Type">
+                            <InputSelect id="categoryType" class="form-select" @bind-Value="categoryForm.Type">
 
                                 <option value="@TransactionType.Expense">
                                     Expense
@@ -93,15 +83,11 @@
 
                             </InputSelect>
 
-                            <ValidationMessage
-                                For="() => categoryForm.Type"
-                                class="text-danger" />
+                            <ValidationMessage For="() => categoryForm.Type" class="text-danger" />
                         </div>
 
                         <div class="col-md-2 d-flex align-items-end">
-                            <button type="submit"
-                                    class="btn btn-primary w-100"
-                                    disabled="@isSaving">
+                            <button type="submit" class="btn btn-primary w-100" disabled="@isSaving">
                                 @(isSaving ? "Adding..." : "Add")
                             </button>
                         </div>
@@ -122,9 +108,7 @@
                 }
                 else
                 {
-                    <EditForm Model="deleteForm"
-                              OnSubmit="DeleteCategoryAsync"
-                              FormName="DeleteCategoryForm">
+                    <EditForm Model="deleteForm" OnSubmit="DeleteCategoryAsync" FormName="DeleteCategoryForm">
 
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0">
@@ -161,11 +145,8 @@
                                             </td>
 
                                             <td class="text-end">
-                                                <button type="submit"
-                                                        name="CategoryId"
-                                                        value="@category.Id"
-                                                        class="btn btn-sm btn-outline-danger"
-                                                        disabled="@isDeleting">
+                                                <button type="submit" name="delteForm.CategoryID" value="@category.Id"
+                                                        class="btn btn-sm btn-outline-danger" disabled="@isDeleting">
                                                     Delete
                                                 </button>
                                             </td>
