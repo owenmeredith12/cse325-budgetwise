@@ -50,7 +50,7 @@
     }
     else
     {
-        <!-- ADD / EDIT TRANSACTION -->
+        <!-- add and edit transactions -->
         <div class="card shadow-sm mb-4">
 
             <div class="card-body">
@@ -86,7 +86,7 @@
 
                         <div class="row g-3">
 
-                            <!-- DESCRIPTION -->
+                            <!-- description -->
                             <div class="col-md-6">
 
                                 <label for="description" class="form-label">
@@ -101,7 +101,7 @@
                             </div>
 
 
-                            <!-- AMOUNT -->
+                            <!-- amount -->
                             <div class="col-md-3">
 
                                 <label for="amount" class="form-label">
@@ -116,7 +116,7 @@
                             </div>
 
 
-                            <!-- DATE -->
+                            <!-- date -->
                             <div class="col-md-3">
 
                                 <label for="date" class="form-label">
@@ -130,7 +130,7 @@
                             </div>
 
 
-                            <!-- TYPE -->
+                            <!-- type-->
                             <div class="col-md-4">
 
                                 <label for="transactionType" class="form-label">
@@ -153,7 +153,7 @@
                             </div>
 
 
-                            <!-- CATEGORY -->
+                            <!-- category -->
                             <div class="col-md-5">
 
                                 <label for="category" class="form-label">
@@ -192,7 +192,7 @@
                             </div>
 
 
-                            <!-- BUTTONS -->
+                            <!-- buttons -->
                             <div class="col-md-3 d-flex align-items-end gap-2">
 
                                 <button type="submit" class="btn btn-primary flex-grow-1" disabled="@isSaving">
@@ -235,7 +235,7 @@
         </div>
 
 
-        <!-- TRANSACTION LIST -->
+        <!-- transaction list -->
         <div class="card shadow-sm">
 
             <div class="card-body">
@@ -305,26 +305,26 @@
                                                                                 ? "table-primary"
                                                                                 : null)">
 
-                                        <!-- DATE -->
+                                        <!-- date -->
                                         <td>
                                             @(transaction.Date.ToString("MMM d, yyyy"))
                                         </td>
 
 
-                                        <!-- DESCRIPTION -->
+                                        <!-- description -->
                                         <td>
                                             @transaction.Description
                                         </td>
 
 
-                                        <!-- CATEGORY -->
+                                        <!-- category -->
                                         <td>
                                             @(transaction.Category?.Name
                                                 ?? "No category")
                                         </td>
 
 
-                                        <!-- TYPE -->
+                                        <!-- type -->
                                         <td>
 
                                             @if (transaction.Type == TransactionType.Income)
@@ -343,7 +343,7 @@
                                         </td>
 
 
-                                        <!-- AMOUNT -->
+                                        <!-- amount -->
                                         <td class="text-end fw-semibold">
 
                                             @if (transaction.Type == TransactionType.Income)
@@ -362,7 +362,7 @@
                                         </td>
 
 
-                                        <!-- ACTIONS -->
+                                        <!-- actions -->
                                         <td class="text-end">
 
                                             <div class="d-inline-flex gap-2">
@@ -413,7 +413,7 @@
     private TransactionFormModel transactionForm { get; set; } = new();
 
 
-    // DATA
+    // data
 
     private List<Category> categories = [];
 
@@ -434,7 +434,7 @@
     private bool isDeleting;
 
 
-    // STATE
+    // state
 
     private bool IsEditing =>
         transactionForm.TransactionId > 0;
@@ -469,7 +469,7 @@
         TotalIncome - TotalExpenses;
 
 
-    // LOAD PAGE
+    // load page
 
     protected override async Task OnInitializedAsync()
     {
@@ -501,7 +501,7 @@
             await LoadCategoriesAsync();
 
 
-            // If this wasn't populated from a submitted form,
+            // if not populated from a submitted form,
             // initialize a new transaction.
             if (transactionForm.Date == default)
             {
@@ -523,7 +523,7 @@
     }
 
 
-    // LOAD CATEGORIES
+    // load categories
 
     private async Task LoadCategoriesAsync()
     {
@@ -548,8 +548,7 @@
     }
 
 
-    // LOAD TRANSACTIONS
-
+    // load transactions
     private async Task LoadTransactionsAsync()
     {
         if (string.IsNullOrWhiteSpace(currentUserId))
@@ -577,7 +576,7 @@
     }
 
 
-    // TYPE CHANGE
+    // type change
 
     private void OnTypeChanged()
     {
@@ -598,7 +597,7 @@
     }
 
 
-    // START EDIT
+    // start edit
 
     private void StartEdit(
         Transaction transaction)
@@ -630,7 +629,7 @@
     }
 
 
-    // CANCEL EDIT
+    // cancel edit
 
     private void CancelEdit()
     {
@@ -661,7 +660,7 @@
     }
 
 
-    // SAVE TRANSACTION
+    // save transaction
 
     private async Task SaveTransactionAsync()
     {
@@ -770,7 +769,7 @@
     }
 
 
-    // ADD TRANSACTION
+    // add transaction
 
     private async Task AddTransactionAsync(
         ApplicationDbContext db,
@@ -829,7 +828,7 @@
     }
 
 
-    // UPDATE TRANSACTION
+    // update transaction
 
     private async Task UpdateTransactionAsync(
         ApplicationDbContext db,
@@ -905,7 +904,7 @@
     }
 
 
-    // DELETE TRANSACTION
+    // delete transaction
 
     private async Task DeleteTransactionAsync(
         int transactionId)
@@ -986,7 +985,7 @@
     }
 
 
-    // MESSAGES
+    // messages
 
     private void ClearMessages()
     {
@@ -996,7 +995,7 @@
     }
 
 
-    // FORM MODEL
+    // form model
 
     private sealed class TransactionFormModel
     {

@@ -47,7 +47,7 @@
     }
     else
     {
-        <!-- ADD / EDIT BUDGET -->
+        <!-- add or edit budget -->
         <div class="card shadow-sm mb-4">
             <div class="card-body">
 
@@ -184,7 +184,7 @@
         </div>
 
 
-        <!-- BUDGET LIST -->
+        <!-- budget list -->
         <div class="card shadow-sm">
             <div class="card-body">
 
@@ -375,40 +375,51 @@
 
 @code {
 
-    // Form binding for normal server POSTs as well as interactive use.
+    // binds the budget form so it works with server posts and interactive blazor
     [SupplyParameterFromForm(FormName = "BudgetForm")]
     private BudgetFormModel budgetForm { get; set; } = new();
 
 
+    // stores the categories and budgets displayed on the page
     private List<Category> expenseCategories = [];
     private List<BudgetRow> budgetRows = [];
 
+
+    // stores information about the currently logged in user
     private string? currentUserId;
     private string? errorMessage;
     private string? successMessage;
 
+
+    // keeps track of loading and database operations
     private bool isLoading = true;
     private bool isSaving;
     private bool isDeleting;
 
+
+    // defaults the budget filter to the current month and year
     private int filterMonth = DateTime.Today.Month;
     private int filterYear = DateTime.Today.Year;
 
 
+    // determines whether the user is creating a new budget or editing one
     private bool IsEditing =>
         budgetForm.BudgetId > 0;
 
 
+    // creates a list of years for the year dropdown
     private IEnumerable<int> AvailableYears =>
         Enumerable.Range(
             DateTime.Today.Year - 2,
             6);
 
 
+    // gets the name of the currently selected month
     private string SelectedFilterMonthName =>
         GetMonthName(filterMonth);
 
 
+    // gets the current user and loads their budget information
     protected override async Task OnInitializedAsync()
     {
         try
@@ -433,7 +444,7 @@
 
             await LoadExpenseCategoriesAsync();
 
-            // Only initialize a blank form if this wasn't a posted form.
+            // only initializes a blank form when there is not already form data
             if (budgetForm.Month <= 0)
             {
                 ResetForm();
@@ -453,6 +464,7 @@
     }
 
 
+    // loads all expense categories belonging to the current user
     private async Task LoadExpenseCategoriesAsync()
     {
         if (string.IsNullOrWhiteSpace(currentUserId))
@@ -473,6 +485,7 @@
     }
 
 
+    // loads budgets for the selected month and calculates spending for each category
     private async Task LoadBudgetsAsync()
     {
         if (string.IsNullOrWhiteSpace(currentUserId))
@@ -495,7 +508,7 @@
             .ToListAsync();
 
 
-        // PostgreSQL timestamptz expects UTC DateTime values.
+        // postgres timestamps use utc dates
         var startDate =
             new DateTime(
                 filterYear,
@@ -510,6 +523,7 @@
             startDate.AddMonths(1);
 
 
+        // totals the expense transactions for each category during the selected month
         var spendingByCategory =
             await db.Transactions
                 .AsNoTracking()
@@ -533,6 +547,7 @@
                     item => item.Spent);
 
 
+        // combines each budget with the amount actually spent
         budgetRows = budgets
             .Select(budget =>
                 new BudgetRow
@@ -549,6 +564,7 @@
     }
 
 
+    // validates the form and either creates a new budget or updates an existing one
     private async Task SaveBudgetAsync()
     {
         ClearMessages();
@@ -569,6 +585,7 @@
                 await DbFactory.CreateDbContextAsync();
 
 
+            // makes sure the selected category belongs to the user and is an expense
             var category =
                 await db.Categories
                     .AsNoTracking()
@@ -590,6 +607,7 @@
             }
 
 
+            // prevents more than one budget for the same category and month
             var duplicateBudget =
                 await db.Budgets
                     .AsNoTracking()
@@ -615,6 +633,7 @@
             }
 
 
+            // updates the existing budget when editing
             if (budgetForm.BudgetId > 0)
             {
                 var budget =
@@ -653,6 +672,7 @@
             }
             else
             {
+                // creates a new budget when the form is not in edit mode
                 var budget = new Budget
                 {
                     Amount =
@@ -683,6 +703,7 @@
             await db.SaveChangesAsync();
 
 
+            // switches the list to the month and year that were just saved
             filterMonth =
                 budgetForm.Month;
 
@@ -712,6 +733,7 @@
     }
 
 
+    // fills the form with an existing budget so it can be edited
     private void StartEdit(Budget budget)
     {
         ClearMessages();
@@ -737,6 +759,7 @@
     }
 
 
+    // cancels editing and returns the form to its default values
     private void CancelEdit()
     {
         ClearMessages();
@@ -745,6 +768,7 @@
     }
 
 
+    // deletes a budget that belongs to the current user
     private async Task DeleteBudgetAsync(
         int budgetId)
     {
@@ -768,6 +792,7 @@
                 await DbFactory.CreateDbContextAsync();
 
 
+            // finds the budget while also making sure it belongs to the current user
             var budget =
                 await db.Budgets
                     .FirstOrDefaultAsync(budget =>
@@ -791,6 +816,7 @@
             await db.SaveChangesAsync();
 
 
+            // resets the form if the deleted budget was being edited
             if (budgetForm.BudgetId ==
                 budgetId)
             {
@@ -822,6 +848,7 @@
     }
 
 
+    // resets the form for creating a new budget
     private void ResetForm()
     {
         budgetForm =
@@ -842,6 +869,7 @@
     }
 
 
+    // converts a month number into its month name
     private static string GetMonthName(
         int month)
     {
@@ -852,6 +880,7 @@
     }
 
 
+    // calculates the width used by the budget progress bar
     private static string GetProgressStyle(
         decimal percentage)
     {
@@ -865,6 +894,7 @@
     }
 
 
+    // clears old success and error messages
     private void ClearMessages()
     {
         errorMessage = null;
@@ -872,6 +902,7 @@
     }
 
 
+    // stores the values entered into the budget form
     private sealed class BudgetFormModel
     {
         public int BudgetId { get; set; }
@@ -917,6 +948,7 @@
     }
 
 
+    // combines a budget with its calculated spending information
     private sealed class BudgetRow
     {
         public required Budget Budget
@@ -933,14 +965,17 @@
         }
 
 
+        // calculates how much of the budget is left
         public decimal Remaining =>
             Budget.Amount - Spent;
 
 
+        // checks whether spending has gone past the budget
         public bool IsOverBudget =>
             Spent > Budget.Amount;
 
 
+        // calculates the percentage of the budget that has been used
         public decimal PercentageUsed =>
             Budget.Amount <= 0
                 ? 0
@@ -949,6 +984,7 @@
                   100;
 
 
+        // prevents the progress bar from growing past 100 percent
         public decimal ProgressWidth =>
             Math.Min(
                 PercentageUsed,

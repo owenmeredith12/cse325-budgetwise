@@ -1,4 +1,5 @@
-﻿@page "/"
+﻿```razor
+@page "/"
 @rendermode InteractiveServer
 @attribute [Authorize]
 
@@ -17,10 +18,11 @@
 <PageTitle>BudgetWise Dashboard</PageTitle>
 
 <div class="container-fluid dashboard-container">
+
+    @* page heading and current month *@
     <div class="dashboard-heading">
         <div>
             <h1>Financial Dashboard</h1>
-
             <p class="text-muted mb-0">
                 An overview of your income, spending, and monthly budgets.
             </p>
@@ -31,6 +33,7 @@
         </div>
     </div>
 
+    @* show any errors that happen while loading the dashboard *@
     @if (!string.IsNullOrWhiteSpace(errorMessage))
     {
         <div class="alert alert-danger" role="alert">
@@ -38,6 +41,7 @@
         </div>
     }
 
+    @* show a loading spinner while the database information is loading *@
     @if (isLoading)
     {
         <div class="dashboard-loading">
@@ -50,7 +54,10 @@
     }
     else
     {
+        @* top summary cards *@
         <div class="row g-4 mb-4">
+
+            @* current account balance *@
             <div class="col-sm-6 col-xl-3">
                 <div class="summary-card">
                     <div class="summary-icon balance-icon">
@@ -61,8 +68,8 @@
 
                     <div class="summary-value
                         @(CurrentBalance >= 0
-                              ? "text-success"
-                              : "text-danger")">
+                            ? "text-success"
+                            : "text-danger")">
                         @CurrentBalance.ToString("C")
                     </div>
 
@@ -72,6 +79,7 @@
                 </div>
             </div>
 
+            @* income for the current month *@
             <div class="col-sm-6 col-xl-3">
                 <div class="summary-card">
                     <div class="summary-icon income-icon">
@@ -90,6 +98,7 @@
                 </div>
             </div>
 
+            @* expenses for the current month *@
             <div class="col-sm-6 col-xl-3">
                 <div class="summary-card">
                     <div class="summary-icon expense-icon">
@@ -108,6 +117,7 @@
                 </div>
             </div>
 
+            @* total remaining across all monthly budgets *@
             <div class="col-sm-6 col-xl-3">
                 <div class="summary-card">
                     <div class="summary-icon budget-icon">
@@ -118,8 +128,8 @@
 
                     <div class="summary-value
                         @(TotalBudgetRemaining >= 0
-                              ? "text-primary"
-                              : "text-danger")">
+                            ? "text-primary"
+                            : "text-danger")">
                         @TotalBudgetRemaining.ToString("C")
                     </div>
 
@@ -141,12 +151,13 @@
         </div>
 
         <div class="row g-4 mb-4">
+
+            @* six month income and expense chart *@
             <div class="col-xl-8">
                 <div class="dashboard-card h-100">
                     <div class="card-heading">
                         <div>
                             <h2>Six-Month Report</h2>
-
                             <p>
                                 Monthly income compared with monthly expenses.
                             </p>
@@ -158,7 +169,6 @@
                     {
                         <div class="empty-state">
                             <span class="bi bi-bar-chart"></span>
-
                             <p>
                                 Add transactions to see your monthly report.
                             </p>
@@ -193,11 +203,13 @@
                                     </div>
 
                                     <div class="bar-area">
-                                        <div class="chart-bar income-bar" title="Income: @report.Income.ToString("C")"
+                                        <div class="chart-bar income-bar"
+                                             title="Income: @report.Income.ToString("C")"
                                              style="@GetBarHeightStyle(report.Income)">
                                         </div>
 
-                                        <div class="chart-bar expense-bar" title="Expenses: @report.Expenses.ToString("C")"
+                                        <div class="chart-bar expense-bar"
+                                             title="Expenses: @report.Expenses.ToString("C")"
                                              style="@GetBarHeightStyle(report.Expenses)">
                                         </div>
                                     </div>
@@ -212,12 +224,12 @@
                 </div>
             </div>
 
+            @* current month spending grouped by category *@
             <div class="col-xl-4">
                 <div class="dashboard-card h-100">
                     <div class="card-heading">
                         <div>
                             <h2>Spending by Category</h2>
-
                             <p>
                                 Expenses during @CurrentMonthName.
                             </p>
@@ -228,7 +240,6 @@
                     {
                         <div class="empty-state">
                             <span class="bi bi-pie-chart"></span>
-
                             <p>
                                 No expenses have been recorded this month.
                             </p>
@@ -242,12 +253,12 @@
                                 <div class="category-row">
                                     <div class="category-row-heading">
                                         <span>@row.CategoryName</span>
-
                                         <strong>@row.Amount.ToString("C")</strong>
                                     </div>
 
                                     <div class="category-track">
-                                        <div class="category-fill" style="@GetWidthStyle(row.Percentage)">
+                                        <div class="category-fill"
+                                             style="@GetWidthStyle(row.Percentage)">
                                         </div>
                                     </div>
 
@@ -264,16 +275,18 @@
         </div>
 
         <div class="row g-4">
+
+            @* show the five most recent transactions *@
             <div class="col-xl-7">
                 <div class="dashboard-card h-100">
                     <div class="card-heading card-heading-row">
                         <div>
                             <h2>Recent Transactions</h2>
-
                             <p>Your latest financial activity.</p>
                         </div>
 
-                        <a href="/transactions" class="btn btn-sm btn-outline-primary">
+                        <a href="/transactions"
+                           class="btn btn-sm btn-outline-primary">
                             View All
                         </a>
                     </div>
@@ -283,9 +296,12 @@
                         <div class="empty-state">
                             <span class="bi bi-receipt"></span>
 
-                            <p>You have not recorded any transactions yet.</p>
+                            <p>
+                                You have not recorded any transactions yet.
+                            </p>
 
-                            <a href="/transactions" class="btn btn-primary btn-sm">
+                            <a href="/transactions"
+                               class="btn btn-primary btn-sm">
                                 Add Transaction
                             </a>
                         </div>
@@ -314,9 +330,9 @@
 
                                                 <span class="badge
                                                     @(transaction.Type ==
-                                                            TransactionType.Income
-                                                            ? "text-bg-success"
-                                                            : "text-bg-danger")">
+                                                        TransactionType.Income
+                                                        ? "text-bg-success"
+                                                        : "text-bg-danger")">
                                                     @transaction.Type
                                                 </span>
                                             </td>
@@ -327,7 +343,7 @@
                                             </td>
 
                                             <td>
-                                                @(transaction.Date.ToString("MMM d, yyyy"))
+                                                @transaction.Date.ToString("MMM d, yyyy")
                                             </td>
 
                                             <td class="text-end fw-semibold
@@ -349,18 +365,19 @@
                 </div>
             </div>
 
+            @* progress for each budget created this month *@
             <div class="col-xl-5">
                 <div class="dashboard-card h-100">
                     <div class="card-heading card-heading-row">
                         <div>
                             <h2>Budget Progress</h2>
-
                             <p>
                                 Your category budgets for @CurrentMonthName.
                             </p>
                         </div>
 
-                        <a href="/budgets" class="btn btn-sm btn-outline-primary">
+                        <a href="/budgets"
+                           class="btn btn-sm btn-outline-primary">
                             Manage
                         </a>
                     </div>
@@ -374,7 +391,8 @@
                                 You have not created any budgets for this month.
                             </p>
 
-                            <a href="/budgets" class="btn btn-primary btn-sm">
+                            <a href="/budgets"
+                               class="btn btn-primary btn-sm">
                                 Create Budget
                             </a>
                         </div>
@@ -398,13 +416,13 @@
 
                                         <span class="budget-status
                                             @(row.IsOverBudget
-                                                    ? "text-danger"
-                                                    : "text-success")">
+                                                ? "text-danger"
+                                                : "text-success")">
+
                                             @if (row.IsOverBudget)
                                             {
                                                 <span>
-                                                    @Math.Abs(row.Remaining)
-                                                    .ToString("C")
+                                                    @Math.Abs(row.Remaining).ToString("C")
                                                     over
                                                 </span>
                                             }
@@ -421,12 +439,15 @@
                                     <div class="progress budget-progress-bar">
                                         <div class="progress-bar
                                             @(row.IsOverBudget
-                                                  ? "bg-danger"
-                                                  : row.PercentageUsed >= 80
-                                                      ? "bg-warning"
-                                                      : "bg-success")" role="progressbar"
-                                             style="@GetWidthStyle(row.ProgressWidth)" aria-valuenow="@row.ProgressWidth"
-                                             aria-valuemin="0" aria-valuemax="100">
+                                                ? "bg-danger"
+                                                : row.PercentageUsed >= 80
+                                                    ? "bg-warning"
+                                                    : "bg-success")"
+                                             role="progressbar"
+                                             style="@GetWidthStyle(row.ProgressWidth)"
+                                             aria-valuenow="@row.ProgressWidth"
+                                             aria-valuemin="0"
+                                             aria-valuemax="100">
                                         </div>
                                     </div>
 
@@ -444,6 +465,7 @@
 </div>
 
 <style>
+    /* main dashboard layout */
     .dashboard-container {
         padding: 2rem;
         max-width: 1600px;
@@ -473,6 +495,7 @@
         font-weight: 600;
     }
 
+    /* loading state */
     .dashboard-loading {
         min-height: 350px;
         display: flex;
@@ -482,6 +505,7 @@
         gap: 1rem;
     }
 
+    /* reusable dashboard cards */
     .summary-card,
     .dashboard-card {
         height: 100%;
@@ -574,6 +598,7 @@
         font-size: 0.875rem;
     }
 
+    /* empty sections before the user has entered data */
     .empty-state {
         min-height: 190px;
         display: flex;
@@ -585,7 +610,7 @@
         text-align: center;
     }
 
-    .empty-state>.bi {
+    .empty-state > .bi {
         color: #94a3b8;
         font-size: 2rem;
     }
@@ -594,6 +619,7 @@
         margin: 0;
     }
 
+    /* six month chart */
     .chart-legend {
         display: flex;
         justify-content: flex-end;
@@ -680,6 +706,7 @@
         font-weight: 600;
     }
 
+    /* category spending and budget lists */
     .category-chart,
     .budget-list {
         display: flex;
@@ -720,6 +747,7 @@
         font-size: 0.72rem;
     }
 
+    /* recent transaction table */
     .dashboard-table {
         margin-bottom: 0;
     }
@@ -746,6 +774,7 @@
         font-weight: 600;
     }
 
+    /* budget progress bars */
     .budget-progress-row {
         padding-bottom: 1rem;
         border-bottom: 1px solid #f1f5f9;
@@ -770,6 +799,7 @@
         height: 10px;
     }
 
+    /* make the dashboard work better on smaller screens */
     @@media (max-width: 767px) {
         .dashboard-container {
             padding: 1rem;
@@ -796,27 +826,31 @@
 </style>
 
 @code {
+    // lists used to store the data displayed on the dashboard
     private List<Transaction> allTransactions = [];
     private List<Transaction> recentTransactions = [];
     private List<CategorySpendingRow> categorySpending = [];
     private List<BudgetProgressRow> budgetProgress = [];
     private List<MonthlyReportRow> monthlyReports = [];
 
+    // current user and page state
     private string? currentUserId;
     private string? errorMessage;
-
     private bool isLoading = true;
 
+    // get the start and end dates for the current month
     private DateTime CurrentMonthStart =>
         new(DateTime.Today.Year, DateTime.Today.Month, 1);
 
     private DateTime NextMonthStart =>
         CurrentMonthStart.AddMonths(1);
 
+    // get the current month name for the dashboard
     private string CurrentMonthName =>
         CultureInfo.CurrentCulture.DateTimeFormat
             .GetMonthName(DateTime.Today.Month);
 
+    // calculate the balance from every recorded transaction
     private decimal CurrentBalance =>
         allTransactions
             .Where(transaction =>
@@ -828,6 +862,7 @@
                 transaction.Type == TransactionType.Expense)
             .Sum(transaction => transaction.Amount);
 
+    // calculate income for only the current month
     private decimal CurrentMonthIncome =>
         allTransactions
             .Where(transaction =>
@@ -836,6 +871,7 @@
                 transaction.Date < NextMonthStart)
             .Sum(transaction => transaction.Amount);
 
+    // calculate expenses for only the current month
     private decimal CurrentMonthExpenses =>
         allTransactions
             .Where(transaction =>
@@ -844,24 +880,29 @@
                 transaction.Date < NextMonthStart)
             .Sum(transaction => transaction.Amount);
 
+    // count income transactions from this month
     private int CurrentMonthIncomeCount =>
         allTransactions.Count(transaction =>
             transaction.Type == TransactionType.Income &&
             transaction.Date >= CurrentMonthStart &&
             transaction.Date < NextMonthStart);
 
+    // count expense transactions from this month
     private int CurrentMonthExpenseCount =>
         allTransactions.Count(transaction =>
             transaction.Type == TransactionType.Expense &&
             transaction.Date >= CurrentMonthStart &&
             transaction.Date < NextMonthStart);
 
+    // total amount budgeted for the current month
     private decimal CurrentMonthBudgetTotal =>
         budgetProgress.Sum(row => row.BudgetAmount);
 
+    // calculate how much money remains across the monthly budgets
     private decimal TotalBudgetRemaining =>
         CurrentMonthBudgetTotal - CurrentMonthExpenses;
 
+    // find the largest chart value so all bars use the same scale
     private decimal MonthlyChartMaximum =>
         Math.Max(
             monthlyReports
@@ -874,6 +915,7 @@
                 .Max(),
             1);
 
+    // load the signed in user before loading dashboard data
     protected override async Task OnInitializedAsync()
     {
         try
@@ -908,6 +950,7 @@
         }
     }
 
+    // load transactions and budgets for the current user
     private async Task LoadDashboardAsync()
     {
         if (string.IsNullOrWhiteSpace(currentUserId))
@@ -918,6 +961,7 @@
         await using var db =
             await DbFactory.CreateDbContextAsync();
 
+        // load all transactions so they can be reused for the dashboard calculations
         allTransactions = await db.Transactions
             .AsNoTracking()
             .Include(transaction => transaction.Category)
@@ -927,6 +971,7 @@
             .ThenByDescending(transaction => transaction.Id)
             .ToListAsync();
 
+        // only show the newest five transactions in the recent activity section
         recentTransactions = allTransactions
             .Take(5)
             .ToList();
@@ -934,6 +979,7 @@
         BuildCategorySpending();
         BuildMonthlyReports();
 
+        // load budgets created for the current month
         var budgets = await db.Budgets
             .AsNoTracking()
             .Include(budget => budget.Category)
@@ -944,6 +990,7 @@
             .OrderBy(budget => budget.Category!.Name)
             .ToListAsync();
 
+        // total this month's spending for each category
         var spendingByCategory = allTransactions
             .Where(transaction =>
                 transaction.Type == TransactionType.Expense &&
@@ -954,6 +1001,7 @@
                 group => group.Key,
                 group => group.Sum(transaction => transaction.Amount));
 
+        // combine each budget with the amount actually spent in its category
         budgetProgress = budgets
             .Select(budget => new BudgetProgressRow
             {
@@ -969,6 +1017,7 @@
             .ToList();
     }
 
+    // group the current month's expenses by category
     private void BuildCategorySpending()
     {
         var groupedSpending = allTransactions
@@ -989,11 +1038,13 @@
         var totalExpenses =
             groupedSpending.Sum(row => row.Amount);
 
+        // calculate what percentage of spending each category represents
         categorySpending = groupedSpending
             .Select(row => new CategorySpendingRow
             {
                 CategoryName = row.CategoryName,
                 Amount = row.Amount,
+
                 Percentage = totalExpenses <= 0
                     ? 0
                     : row.Amount / totalExpenses * 100
@@ -1001,6 +1052,7 @@
             .ToList();
     }
 
+    // create income and expense totals for the last six months
     private void BuildMonthlyReports()
     {
         monthlyReports = [];
@@ -1034,6 +1086,7 @@
         }
     }
 
+    // convert a dollar amount into a percentage height for the chart
     private string GetBarHeightStyle(decimal amount)
     {
         var percentage =
@@ -1044,6 +1097,7 @@
         return $"height: {Math.Max(percentage, amount > 0 ? 2 : 0):0.##}%;";
     }
 
+    // keep progress bars between zero and one hundred percent
     private static string GetWidthStyle(decimal percentage)
     {
         var limitedPercentage =
@@ -1052,6 +1106,7 @@
         return $"width: {limitedPercentage:0.##}%;";
     }
 
+    // shorten larger dollar values so they fit above the chart bars
     private static string FormatShortCurrency(decimal amount)
     {
         if (amount >= 1_000_000)
@@ -1067,30 +1122,27 @@
         return amount.ToString("C0");
     }
 
+    // represents one row in the category spending section
     private sealed class CategorySpendingRow
     {
         public string CategoryName { get; init; } = string.Empty;
-
         public decimal Amount { get; init; }
-
         public decimal Percentage { get; init; }
     }
 
+    // stores one month's income and expense totals
     private sealed class MonthlyReportRow
     {
         public string MonthLabel { get; init; } = string.Empty;
-
         public decimal Income { get; init; }
-
         public decimal Expenses { get; init; }
     }
 
+    // stores the calculated values used by each budget progress bar
     private sealed class BudgetProgressRow
     {
         public string CategoryName { get; init; } = string.Empty;
-
         public decimal BudgetAmount { get; init; }
-
         public decimal Spent { get; init; }
 
         public decimal Remaining =>
@@ -1108,3 +1160,4 @@
             Spent > BudgetAmount;
     }
 }
+```

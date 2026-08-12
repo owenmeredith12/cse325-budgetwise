@@ -46,7 +46,7 @@
     }
     else
     {
-        <!-- ADD CATEGORY -->
+        <!-- add category -->
         <div class="card shadow-sm mb-4">
             <div class="card-body">
 
@@ -105,7 +105,7 @@
             </div>
         </div>
 
-        <!-- CATEGORY LIST -->
+        <!-- category list -->
         <div class="card shadow-sm">
             <div class="card-body">
 
@@ -185,13 +185,13 @@
 
 @code {
 
-    // ADD CATEGORY FORM
+    // add category form
 
     [SupplyParameterFromForm(FormName = "AddCategoryForm")]
     private CategoryFormModel categoryForm { get; set; } = new();
 
 
-    // PAGE DATA
+    // page data
 
     private List<Category> categories = [];
 
@@ -204,7 +204,7 @@
     private bool isDeleting;
 
 
-    // PAGE LOAD
+    // page load
 
     protected override async Task OnInitializedAsync()
     {
@@ -242,7 +242,7 @@
     }
 
 
-    // LOAD CATEGORIES
+    // load all categories
 
     private async Task LoadCategoriesAsync()
     {
@@ -264,7 +264,7 @@
     }
 
 
-    // ADD CATEGORY
+    // add category
 
     private async Task AddCategoryAsync()
     {
@@ -352,7 +352,7 @@
     }
 
 
-    // DELETE CATEGORY
+    // delete category
 
     private async Task DeleteCategoryAsync(int categoryId)
     {
@@ -433,7 +433,7 @@
     }
 
 
-    // CLEAR MESSAGES
+    // clear messages
 
     private void ClearMessages()
     {
@@ -442,7 +442,7 @@
     }
 
 
-    // ADD CATEGORY FORM MODEL
+    // add category form model
 
     private sealed class CategoryFormModel
     {
