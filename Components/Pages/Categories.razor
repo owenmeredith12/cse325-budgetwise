@@ -80,7 +80,6 @@
                                 <option value="@TransactionType.Income">
                                     Income
                                 </option>
-
                             </InputSelect>
 
                             <ValidationMessage For="() => categoryForm.Type" class="text-danger" />
@@ -108,7 +107,7 @@
                 }
                 else
                 {
-                    <EditForm Model="deleteForm" OnSubmit="DeleteCategoryAsync" FormName="DeleteCategoryForm">
+                    <EditForm Model="this" OnSubmit="DeleteCategoryAsync" FormName="DeleteCategoryForm">
 
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0">
@@ -124,13 +123,10 @@
                                     @foreach (var category in categories)
                                     {
                                         <tr>
-                                            <td>
-                                                @category.Name
-                                            </td>
+                                            <td>@category.Name</td>
 
                                             <td>
-                                                @if (category.Type ==
-                                                     TransactionType.Income)
+                                                @if (category.Type == TransactionType.Income)
                                                 {
                                                     <span class="badge text-bg-success">
                                                         Income
@@ -145,7 +141,7 @@
                                             </td>
 
                                             <td class="text-end">
-                                                <button type="submit" name="deleteForm.CategoryId" value="@category.Id"
+                                                <button type="submit" name="CategoryId" value="@category.Id"
                                                         class="btn btn-sm btn-outline-danger" disabled="@isDeleting">
                                                     Delete
                                                 </button>
@@ -166,8 +162,10 @@
     [SupplyParameterFromForm(FormName = "AddCategoryForm")]
     private CategoryFormModel categoryForm { get; set; } = new();
 
-    [SupplyParameterFromForm(FormName = "DeleteCategoryForm")]
-    private DeleteCategoryFormModel deleteForm { get; set; } = new();
+    [SupplyParameterFromForm(
+        FormName = "DeleteCategoryForm",
+        Name = "CategoryId")]
+    private int categoryIdToDelete { get; set; }
 
     private List<Category> categories = [];
 
@@ -330,7 +328,7 @@
             return;
         }
 
-        if (deleteForm.CategoryId <= 0)
+        if (categoryIdToDelete <= 0)
         {
             errorMessage =
                 "Invalid category selected.";
@@ -347,7 +345,7 @@
 
             var category =
                 await db.Categories.FirstOrDefaultAsync(category =>
-                    category.Id == deleteForm.CategoryId &&
+                    category.Id == categoryIdToDelete &&
                     category.UserId == currentUserId);
 
             if (category is null)
@@ -380,7 +378,7 @@
 
             await db.SaveChangesAsync();
 
-            deleteForm = new DeleteCategoryFormModel();
+            categoryIdToDelete = 0;
 
             successMessage =
                 "Category deleted successfully.";
@@ -422,10 +420,5 @@
         [Required]
         public TransactionType Type { get; set; } =
             TransactionType.Expense;
-    }
-
-    private sealed class DeleteCategoryFormModel
-    {
-        public int CategoryId { get; set; }
     }
 }
