@@ -48,7 +48,7 @@
             <div class="card-body">
                 <h2 class="h5 mb-3">Add Category</h2>
 
-                <EditForm Model="categoryForm" OnValidSubmit="AddCategoryAsync">
+                <EditForm Model="categoryForm" OnValidSubmit="AddCategoryAsync" FormName="AddCategoryForm">
                     <DataAnnotationsValidator />
                     <ValidationSummary class="text-danger mb-3" />
 
